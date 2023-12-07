@@ -2,7 +2,6 @@ package com.ktor.security
 
 
 import io.ktor.client.*
-import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
@@ -21,8 +20,8 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
-import model.RefreshTokenResponse
-import model.UserAccessTokenResponse
+import model.ebay.RefreshTokenResponse
+import model.ebay.UserAccessTokenResponse
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import storage.kvstore

@@ -15,7 +15,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import model.Orders
+import model.ebay.Orders
 
 
 fun Modifier.conditional(condition: Boolean, modifier: Modifier.() -> Modifier): Modifier {
@@ -39,7 +39,7 @@ fun OrderCompose(order: Orders, checkedOrders: List<Orders>, onCheckedChange: (O
     }
     Column(modifier = Modifier.fillMaxWidth()) {
 
-        Row(modifier = Modifier
+        Row(modifier = Modifier.fillMaxWidth()
 
             .conditional(checkedState.value)
             {
@@ -49,12 +49,13 @@ fun OrderCompose(order: Orders, checkedOrders: List<Orders>, onCheckedChange: (O
                 checkedState.value = it
                 onCheckedChange(order)
             })
-            Text(
+            Text(modifier = Modifier.align(Alignment.CenterVertically),
                 text = order.orderId.orEmpty(),
                 color = Color.Green
             )
 
-            Text(text = items)
+            Text(text = items,
+                modifier = Modifier.align(Alignment.CenterVertically))
         }
 
 

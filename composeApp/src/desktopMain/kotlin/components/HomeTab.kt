@@ -21,22 +21,26 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.ktor.security.EbayAuthController
+import controller.LexofficeController
 import io.ktor.client.statement.*
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.serialization.json.Json
-import model.OrderResponse
-import model.Orders
+import model.ebay.OrderResponse
+import model.ebay.Orders
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 
 
 import storage.kvstore
 import java.time.LocalDateTime
+import java.util.*
 
 
 object HomeTab : KoinComponent, Tab {
     private val store: kvstore by inject()
     private val settings = store.settings
+    private val lexofficeController: LexofficeController by inject()
 
 
     private fun readResolve(): Any = HomeTab
@@ -60,6 +64,8 @@ object HomeTab : KoinComponent, Tab {
 
         }
 
+
+
     @Composable
     @Preview
     override fun Content() {
@@ -68,8 +74,15 @@ object HomeTab : KoinComponent, Tab {
         val coroutineScope = rememberCoroutineScope()
         val ebayAuthController = EbayAuthController()
 
+        fun makeInvoiceForOrders(){
+            coroutineScope.launch{
+               val res = lexofficeController.getContactOrCreateNew("Handke","Maximilian","lisa.kettner99@gmail.com","Berlin",
+                   "DE","Straße 5","Extra Text","12345")
+                println("Outcome: " + res)
+            }
 
-        fun clickMich() {
+        }
+        fun getOrders() {
             coroutineScope.launch {
                 val now = LocalDateTime.now()
 
@@ -110,7 +123,7 @@ object HomeTab : KoinComponent, Tab {
 
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { clickMich() },
+                    onClick = { getOrders() },
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(5.dp),
                     text = { Text("GetOrders") },
                     icon = { Icon(Icons.Filled.AddCircle, "") },
@@ -123,7 +136,7 @@ object HomeTab : KoinComponent, Tab {
 
                     }
 
-                    Button(onClick = { println("Checked Orders: " + checkedOrders.toList().toString()) }) {
+                    Button(onClick = { makeInvoiceForOrders();println("Checked Orders: " + checkedOrders.toList().toString()) }) {
                         Text(text = "Check Checked Orders")
                     }
                 }

@@ -7,4 +7,5 @@ import java.util.prefs.Preferences
 class kvstore {
 
     val settings: Settings = PreferencesSettings(Preferences.userRoot())
+
 }
