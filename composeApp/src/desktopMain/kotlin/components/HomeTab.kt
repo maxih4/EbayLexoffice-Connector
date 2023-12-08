@@ -75,10 +75,17 @@ object HomeTab : KoinComponent, Tab {
         val ebayAuthController = EbayAuthController()
 
         fun makeInvoiceForOrders(){
+
+
             coroutineScope.launch{
+
                val res = lexofficeController.getContactOrCreateNew("Handke","Maximilian","lisa.kettner99@gmail.com","Berlin",
                    "DE","Straße 5","Extra Text","12345")
-                println("Outcome: " + res)
+
+                //Res ist neu erstellter Kontakt oder der gefundene
+
+                val output = lexofficeController.createInvoiceFromOrder(checkedOrders.first(),res)
+                println("Outcome: " + output)
             }
 
         }
@@ -132,7 +139,13 @@ object HomeTab : KoinComponent, Tab {
 
                 if (orders.isNotEmpty()) {
                     orders.forEach {
-                        OrderCompose(it, checkedOrders, onCheckedChange = { checkedOrders.add(it) })
+                        OrderCompose(it, checkedOrders, onCheckedChange = {
+                            if(checkedOrders.contains(it)){
+                                checkedOrders.remove(it)
+                            }else {
+                                checkedOrders.add(it)
+                            }
+                        })
 
                     }
 

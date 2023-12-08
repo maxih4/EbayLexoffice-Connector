@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class createUserResponse(
+data class creationResponse(
     @SerialName("createdDate")
     val createdDate: String? = "",
     @SerialName("id")
