@@ -23,8 +23,7 @@ import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.ktor.security.EbayAuthController
 import controller.LexofficeController
 import io.ktor.client.statement.*
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlinx.serialization.json.Json
 import model.ebay.OrderResponse
 import model.ebay.Orders
@@ -65,7 +64,6 @@ object HomeTab : KoinComponent, Tab {
         }
 
 
-
     @Composable
     @Preview
     override fun Content() {
@@ -74,21 +72,31 @@ object HomeTab : KoinComponent, Tab {
         val coroutineScope = rememberCoroutineScope()
         val ebayAuthController = EbayAuthController()
 
-        fun makeInvoiceForOrders(){
+        fun makeInvoiceForOrders() {
+            //Todo Fehler wenn checked Orders leer
 
 
-            coroutineScope.launch{
+            checkedOrders.forEach {
 
-               val res = lexofficeController.getContactOrCreateNew("Handke","Maximilian","lisa.kettner99@gmail.com","Berlin",
-                   "DE","Straße 5","Extra Text","12345")
-
-                //Res ist neu erstellter Kontakt oder der gefundene
-
-                val output = lexofficeController.createInvoiceFromOrder(checkedOrders.first(),res)
-                println("Outcome: " + output)
+                coroutineScope.launch {
+                    val contactId = lexofficeController.getContactOrCreateNew(
+                        lastName = it.buyer?.buyerRegistrationAddress?.fullName?.split(" ")!![1],
+                        firstName = it.buyer?.buyerRegistrationAddress?.fullName?.split(" ")!![0],
+                        email = it.buyer?.buyerRegistrationAddress?.email.orEmpty(),
+                        city = it.buyer?.buyerRegistrationAddress?.contactAddress?.city!!,
+                        countryCode = it.buyer?.buyerRegistrationAddress?.contactAddress?.countryCode!!,
+                        street = it.buyer?.buyerRegistrationAddress?.contactAddress?.addressLine1!!,
+                        supplement = "",
+                        zip = it.buyer?.buyerRegistrationAddress?.contactAddress?.postalCode!!
+                    )
+                    val output = lexofficeController.createInvoiceFromOrder(it, contactId)
+                    println("Outcome: $output")
+                }
             }
 
+
         }
+
         fun getOrders() {
             coroutineScope.launch {
                 val now = LocalDateTime.now()
@@ -140,16 +148,20 @@ object HomeTab : KoinComponent, Tab {
                 if (orders.isNotEmpty()) {
                     orders.forEach {
                         OrderCompose(it, checkedOrders, onCheckedChange = {
-                            if(checkedOrders.contains(it)){
+                            if (checkedOrders.contains(it)) {
                                 checkedOrders.remove(it)
-                            }else {
+                            } else {
                                 checkedOrders.add(it)
                             }
                         })
 
                     }
 
-                    Button(onClick = { makeInvoiceForOrders();println("Checked Orders: " + checkedOrders.toList().toString()) }) {
+                    Button(onClick = {
+                        makeInvoiceForOrders();println(
+                        "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
+                    )
+                    }) {
                         Text(text = "Check Checked Orders")
                     }
                 }

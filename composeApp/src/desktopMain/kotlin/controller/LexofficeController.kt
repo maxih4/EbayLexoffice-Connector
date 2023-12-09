@@ -1,14 +1,20 @@
 package controller
 
+import com.sletmoe.bucket4k.SuspendingBucket
+import io.github.bucket4j.Bandwidth
+import io.github.bucket4j.TimeMeter
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
+import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
 import model.ebay.Orders
@@ -18,15 +24,22 @@ import model.lexoffice.*
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import storage.kvstore
-import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.toJavaDuration
 
 
 class LexofficeController : KoinComponent {
     private val store: kvstore by inject()
     private val settings = store.settings
+    private val json = Json {
+        ignoreUnknownKeys = true
+    }
+    private val tokenBucket = SuspendingBucket.build {
+        addLimit(Bandwidth.simple(2, (1).seconds.toJavaDuration()))
+        timeMeter = TimeMeter.SYSTEM_MILLISECONDS
+    }
 
     private val lexofficeClient = HttpClient(CIO) {
         install(Auth) {
@@ -38,6 +51,18 @@ class LexofficeController : KoinComponent {
         }
         install(ContentNegotiation) {
             json()
+        }
+        /*install(Logging) {
+            logger = Logger.SIMPLE
+            level = LogLevel.HEADERS
+        }*/
+        install(HttpRequestRetry) {
+            retryOnServerErrors(maxRetries = 5)
+            exponentialDelay()
+            retryIf{request,response->
+                response.status.value==429
+            }
+            this.modifyRequest { println("Retry Request") }
         }
     }
 
@@ -52,50 +77,67 @@ class LexofficeController : KoinComponent {
         supplement: String,
         zip: String
     ): String {
-        val responseFilterUser =
-            Json.decodeFromString<filterContactsResponse>(lexofficeClient.get("https://api.lexoffice.io/v1/contacts") {
-                url {
-                    parameters.append("email", email)
-                    parameters.append("name", lastName)
-                }
-            }.bodyAsText())
 
-        if (responseFilterUser.numberOfElements == 0) {
-            //Create new Contact
-            val newUserRequest = createUserRequest(
-                addresses = Addresses(
-                    billing = listOf(
-                        Billing(
-                            city = city,
-                            countryCode = countryCode,
-                            street = street,
-                            supplement = supplement,
-                            zip = zip
-                        )
-                    )
-                ), archived = false, emailAddresses = EmailAddresses(listOf(email)),
-                person = Person(firstName, lastName),
-                roles = Roles(Customer(null)),
-                version = 0
-            )
+        tokenBucket.consume(1)
 
-            val responseCreatedUser =
-                Json.decodeFromString<creationResponse>(
-                    lexofficeClient.post("https://api.lexoffice.io/v1/contacts") {
-                        contentType(ContentType.Application.Json)
-                        setBody(Json.encodeToJsonElement(newUserRequest))
+        try {
+
+
+            val responseFilterUser =
+                json.decodeFromString<FilterContactsResponse>(lexofficeClient.get("https://api.lexoffice.io/v1/contacts") {
+                    url {
+                        if (email.isNotEmpty()) parameters.append("email", email)
+                        parameters.append("name", lastName)
                     }
-                        .bodyAsText())
-            return responseCreatedUser.id!!
+                }.bodyAsText())
 
-        } else {
-            return responseFilterUser.content?.first()?.id!!
+            println(responseFilterUser.toString())
+            if (responseFilterUser.numberOfElements == 0) {
+                println("Neuer Kontakt wird erstellt")
+                //Create new Contact
+                val newUserRequest = CreateUserRequest(
+                    addresses = Addresses(
+                        billing = listOf(
+                            Billing(
+                                city = city,
+                                countryCode = countryCode,
+                                street = street,
+                                supplement = supplement,
+                                zip = zip
+                            )
+                        )
+                    ), archived = false,
+                    person = Person(firstName, lastName),
+                    roles = Roles(Customer(null)),
+                    version = 0
+                )
+                if (email.isNotEmpty()) newUserRequest.emailAddresses = EmailAddresses(listOf(email))
+                println(newUserRequest.toString())
+
+                tokenBucket.consume(1)
+
+                val responseCreatedUser =
+                    json.decodeFromString<CreationResponse>(
+                        lexofficeClient.post("https://api.lexoffice.io/v1/contacts") {
+                            contentType(ContentType.Application.Json)
+                            setBody(Json.encodeToJsonElement(newUserRequest))
+                        }
+                            .bodyAsText())
+                return responseCreatedUser.id!!
+
+
+            } else {
+                return responseFilterUser.content?.first()?.id!!
+            }
+        } catch (ex: Exception) {
+            println("Exception: " + ex.message)
         }
 
 
+        return "Fehler"
     }
 
-    suspend fun createInvoiceFromOrder(order: Orders, contactId: String): String {
+    suspend fun createInvoiceFromOrder(order: Orders, contactId: String): CreationResponse {
 
         val lineItemList = ArrayList<LineItem>()
         order.lineItems.forEach { it ->
@@ -139,7 +181,7 @@ class LexofficeController : KoinComponent {
             )
         }
 
-        val newInvoice = createInvoiceRequest(
+        val newInvoice = CreateInvoiceRequest(
             address = Address(
                 contactId = contactId
             ),
@@ -166,11 +208,14 @@ class LexofficeController : KoinComponent {
             )
         )
 
-        val createInvoiceResponse = lexofficeClient.post("https://api.lexoffice.io/v1/invoices") {
-            url { parameters.append("finalize", "false") }
-            contentType(ContentType.Application.Json)
-            setBody(Json.encodeToJsonElement(newInvoice))
-        }.bodyAsText()
+        tokenBucket.consume(1)
+
+        val createInvoiceResponse =
+            json.decodeFromString<CreationResponse>(lexofficeClient.post("https://api.lexoffice.io/v1/invoices") {
+                url { parameters.append("finalize", "false") }
+                contentType(ContentType.Application.Json)
+                setBody(Json.encodeToJsonElement(newInvoice))
+            }.bodyAsText())
 
 
         return createInvoiceResponse;
@@ -181,13 +226,11 @@ class LexofficeController : KoinComponent {
         var ret: Float? = totalPrice?.toFloatOrNull()?.div(totalPriceWithDiscount?.toFloatOrNull()!!)
         ret = ret?.times(100)
         ret = 100 - ret!!
-        if (ret != null) {
-            ret = (Math.round(ret * 100.0) / 100.0).toFloat()
-        }
-        return ret!!
+        ret = (Math.round(ret * 100.0) / 100.0).toFloat()
+        return ret
     }
 
 
-    //Todo Shipping Cost
+//Todo Shipping Cost
 
 }

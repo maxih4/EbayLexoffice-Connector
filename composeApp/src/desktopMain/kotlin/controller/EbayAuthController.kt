@@ -114,7 +114,7 @@ class EbayAuthController() : KoinComponent {
         val client = HttpClient(CIO) {
 
 
-
+            /*
             install(Logging) {
                 logger = object : Logger {
                     override fun log(message: String) {
@@ -122,7 +122,7 @@ class EbayAuthController() : KoinComponent {
                     }
                 }
                 level = LogLevel.HEADERS
-            }
+            }*/
             install(Auth) {
                 bearer {
                     loadTokens {
@@ -138,28 +138,28 @@ class EbayAuthController() : KoinComponent {
                         try {
 
 
-                        val refreshTokenResponse = Json.decodeFromString<RefreshTokenResponse>(client.submitForm(
-                            url = "https://api.ebay.com/identity/v1/oauth2/token",
-                            formParameters = parameters {
-                                append("grant_type", "refresh_token")
-                                append("refresh_token", oldTokens?.refreshToken ?: "")
+                            val refreshTokenResponse = Json.decodeFromString<RefreshTokenResponse>(client.submitForm(
+                                url = "https://api.ebay.com/identity/v1/oauth2/token",
+                                formParameters = parameters {
+                                    append("grant_type", "refresh_token")
+                                    append("refresh_token", oldTokens?.refreshToken ?: "")
 
 
-                            }) {
-                            headers {
-                                append(
-                                    HttpHeaders.Authorization,
-                                    "Basic TWF4SGFuZGstTGV4b2ZmaWMtUFJELThkNGE4ODZmNS0zYWQ4NjdiODpQUkQtZDRhODg2ZjVkMjJjLWEzZjktNGVkYS1hYWY4LTgzN2Q="
-                                )
-                            }
-                            markAsRefreshTokenRequest()
-                        }.bodyAsText())
+                                }) {
+                                headers {
+                                    append(
+                                        HttpHeaders.Authorization,
+                                        "Basic TWF4SGFuZGstTGV4b2ZmaWMtUFJELThkNGE4ODZmNS0zYWQ4NjdiODpQUkQtZDRhODg2ZjVkMjJjLWEzZjktNGVkYS1hYWY4LTgzN2Q="
+                                    )
+                                }
+                                markAsRefreshTokenRequest()
+                            }.bodyAsText()
+                            )
 
                             println("Ausgeführt und Antwort erhalten $refreshTokenResponse")
                             settings.putString("access_token", refreshTokenResponse.access_token)
                             settings.putInt("expires_in", refreshTokenResponse.expires_in)
-                        }
-                        catch (e: Exception){
+                        } catch (e: Exception) {
                             //Todo neuen Login Flow
                         }
 

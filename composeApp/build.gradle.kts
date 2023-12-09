@@ -35,6 +35,7 @@ kotlin {
             implementation("io.ktor:ktor-client-serialization:2.3.6")
             implementation("io.ktor:ktor-client-json:2.3.6")
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.6")
+            implementation("com.sletmoe.bucket4k:bucket4k:1.0.0")
             implementation(compose.materialIconsExtended)
 
 

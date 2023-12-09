@@ -5,7 +5,7 @@ import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 
 @Serializable
-data class createInvoiceRequest(
+data class CreateInvoiceRequest(
     @SerialName("address")
     val address: Address? = Address(),
     @SerialName("archived")
