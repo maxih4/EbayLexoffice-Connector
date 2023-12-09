@@ -37,6 +37,7 @@ kotlin {
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.6")
             implementation("com.sletmoe.bucket4k:bucket4k:1.0.0")
             implementation(compose.materialIconsExtended)
+            implementation("io.github.epicarchitect:calendar-compose-datepicker:1.0.5")
 
 
 
@@ -55,7 +56,7 @@ kotlin {
             implementation("io.ktor:ktor-client-auth:2.3.6")
             implementation("io.insert-koin:koin-core:3.5.2-RC1")
             implementation("cafe.adriel.voyager:voyager-tab-navigator:$voyagerVersion")
-
+            implementation("io.github.kevinnzou:compose-progressIndicator-multiplatform:1.3.0")
 
 
         }

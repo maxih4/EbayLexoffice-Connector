@@ -10,8 +10,12 @@ import androidx.compose.material.icons.Icons
 
 import androidx.compose.material.icons.filled.AddCircle
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material3.DateRangePicker
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -66,17 +70,30 @@ object HomeTab : KoinComponent, Tab {
 
     @Composable
     @Preview
+    @ExperimentalMaterial3Api
     override fun Content() {
         val orders = rememberSaveable { mutableStateListOf<Orders>() }
         val checkedOrders = rememberSaveable { mutableStateListOf<Orders>() }
         val coroutineScope = rememberCoroutineScope()
         val ebayAuthController = EbayAuthController()
+        val checkedAllState = rememberSaveable { mutableStateOf(false) }
+        val checkAllEnabled = rememberSaveable { mutableStateOf(false) }
+        val isLoading = rememberSaveable { mutableStateOf(false) }
+        val loadingProgress = rememberSaveable { mutableStateOf(0F) }
+        val datePickerState = rememberDateRangePickerState()
 
         fun makeInvoiceForOrders() {
             //Todo Fehler wenn checked Orders leer
-
-
+            isLoading.value = true
+            loadingProgress.value = 0F
+            val progressSize: Float = (1F / checkedOrders.size)
+            println("progresssize = " + progressSize)
             checkedOrders.forEach {
+                println(
+                    "Log before coroutineScope" + "Progress: " + loadingProgress.value + "" + "Order index: " + checkedOrders.indexOf(
+                        it
+                    ) + "IsLoading value = " + isLoading.value
+                )
 
                 coroutineScope.launch {
                     val contactId = lexofficeController.getContactOrCreateNew(
@@ -90,14 +107,23 @@ object HomeTab : KoinComponent, Tab {
                         zip = it.buyer?.buyerRegistrationAddress?.contactAddress?.postalCode!!
                     )
                     val output = lexofficeController.createInvoiceFromOrder(it, contactId)
+
                     println("Outcome: $output")
+
+                    loadingProgress.value += progressSize
+                    println("Progress: " + loadingProgress.value + "" + "Order index: " + checkedOrders.indexOf(it) + "IsLoading value = " + isLoading.value)
+                    if (loadingProgress.value >= 1) {
+                        isLoading.value = false
+                    }
                 }
+
             }
 
 
         }
 
         fun getOrders() {
+            checkAllEnabled.value = false
             coroutineScope.launch {
                 val now = LocalDateTime.now()
 
@@ -123,29 +149,56 @@ object HomeTab : KoinComponent, Tab {
                     ).orders
                 )
 
-
+                checkAllEnabled.value = true
             }
+
+
         }
 
         val scrollstate = rememberScrollState()
 
         BoxWithConstraints {
-
-
             Column(
                 modifier = Modifier
                     .verticalScroll(scrollstate).fillMaxWidth()
 
             ) {
-                ExtendedFloatingActionButton(
-                    onClick = { getOrders() },
-                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(5.dp),
-                    text = { Text("GetOrders") },
-                    icon = { Icon(Icons.Filled.AddCircle, "") },
-                    backgroundColor = Color.LightGray
-                )
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Row {
+                        Checkbox(
+                            checked = checkedAllState.value,
+                            modifier = Modifier.align(Alignment.CenterVertically),
+                            onCheckedChange = {
+                                checkAllOrder(checkedAllState, it, checkedOrders, orders)
+
+                            },
+                            enabled = checkAllEnabled.value
+                        )
+                        Text(
+                            "Check all Orders",
+                            modifier = Modifier.align(Alignment.CenterVertically)
+                        )
+                    }
+
+
+                    ExtendedFloatingActionButton(
+                        onClick = { getOrders() },
+                        modifier = Modifier.padding(5.dp),
+                        text = { Text("GetOrders") },
+                        icon = { Icon(Icons.Filled.AddCircle, "") },
+                        backgroundColor = Color.LightGray
+                    )
+
+
+                }
+
 
                 if (orders.isNotEmpty()) {
+                    OrderTableHeader()
+
                     orders.forEach {
                         OrderCompose(it, checkedOrders, onCheckedChange = {
                             if (checkedOrders.contains(it)) {
@@ -162,13 +215,14 @@ object HomeTab : KoinComponent, Tab {
                         "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
                     )
                     }) {
-                        Text(text = "Check Checked Orders")
+                        Text(text = "Create Invoice from Orders")
                     }
                 }
 
             }
-
-
+            if (isLoading.value) {
+                OrdersAreLoadingDialog(onDismissRequest = {}, progress = loadingProgress.value)
+            }
             VerticalScrollbar(
                 adapter = rememberScrollbarAdapter(scrollstate),
                 style = LocalScrollbarStyle.current.copy(unhoverColor = Color.Black, shape = RectangleShape),
@@ -178,6 +232,24 @@ object HomeTab : KoinComponent, Tab {
             )
         }
 
+    }
+
+    private fun checkAllOrder(
+        checkedAllState: MutableState<Boolean>,
+        it: Boolean,
+        checkedOrders: SnapshotStateList<Orders>,
+        orders: SnapshotStateList<Orders>
+    ) {
+        checkedAllState.value = it;
+        //Check all other Orders, and add all to the checked Orders field
+        if ((checkedOrders.size != orders.size) && it) {
+            checkedOrders.addAll(orders)
+            val distinct = checkedOrders.distinct()
+            checkedOrders.clear()
+            checkedOrders.addAll(distinct)
+        } else {
+            checkedOrders.clear()
+        }
     }
 
 
