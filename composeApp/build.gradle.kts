@@ -37,6 +37,8 @@ kotlin {
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.6")
             implementation("com.sletmoe.bucket4k:bucket4k:1.0.0")
             implementation(compose.materialIconsExtended)
+            implementation(compose.material3)
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.5.0")
 
 
 

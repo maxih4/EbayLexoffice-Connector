@@ -22,23 +22,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
-import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import com.ktor.security.EbayAuthController
 import controller.LexofficeController
-import epicarchitect.calendar.compose.basis.config.rememberBasisEpicCalendarConfig
-import epicarchitect.calendar.compose.datepicker.EpicDatePicker
-import epicarchitect.calendar.compose.datepicker.config.rememberEpicDatePickerConfig
-import epicarchitect.calendar.compose.datepicker.state.EpicDatePickerState
-import epicarchitect.calendar.compose.datepicker.state.rememberEpicDatePickerState
-import epicarchitect.calendar.compose.pager.config.rememberEpicCalendarPagerConfig
 import io.ktor.client.statement.*
 import kotlinx.coroutines.*
 import kotlinx.datetime.*
-import kotlinx.datetime.TimeZone
 import kotlinx.serialization.json.Json
 import model.ebay.OrderResponse
 import model.ebay.Orders
@@ -49,7 +41,6 @@ import org.koin.core.component.inject
 import storage.kvstore
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 import java.util.*
 
 
@@ -246,7 +237,7 @@ object HomeTab : KoinComponent, Tab {
                         makeInvoiceForOrders();println(
                         "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
                     )
-                    }) {
+                    }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
                         Text(text = "Create Invoice from Orders")
                     }
                 }
