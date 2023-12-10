@@ -37,7 +37,7 @@ kotlin {
             implementation("io.ktor:ktor-serialization-kotlinx-json:2.3.6")
             implementation("com.sletmoe.bucket4k:bucket4k:1.0.0")
             implementation(compose.materialIconsExtended)
-            implementation("io.github.epicarchitect:calendar-compose-datepicker:1.0.5")
+
 
 
 
