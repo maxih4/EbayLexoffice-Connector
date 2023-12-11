@@ -17,7 +17,7 @@ data class LineItems(
     var total: Total? = Total(),
     var deliveryCost: DeliveryCost? = DeliveryCost(),
     var appliedPromotions: ArrayList<AppliedPromotion> = arrayListOf(),
-    var taxes: ArrayList<String> = arrayListOf(),
+    var taxes: ArrayList<Taxes> = arrayListOf(),
     var properties: Properties? = Properties(),
     var lineItemFulfillmentInstructions: LineItemFulfillmentInstructions? = LineItemFulfillmentInstructions(),
     var itemLocation: ItemLocation? = ItemLocation(),

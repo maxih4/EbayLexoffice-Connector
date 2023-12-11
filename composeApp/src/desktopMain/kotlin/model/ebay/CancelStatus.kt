@@ -7,6 +7,6 @@ import kotlinx.serialization.Serializable
 data class CancelStatus (
 
 var cancelState    : String?           = null,
-var cancelRequests : ArrayList<String> = arrayListOf()
+var cancelRequests : ArrayList<CancelRequest> = arrayListOf()
 
 )

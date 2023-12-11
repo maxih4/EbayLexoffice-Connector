@@ -5,9 +5,9 @@ import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
-
-
 import io.ktor.client.plugins.logging.*
+
+
 import io.ktor.client.request.*
 import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
@@ -20,6 +20,7 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.*
+import model.ebay.OrderResponse
 import model.ebay.RefreshTokenResponse
 import model.ebay.UserAccessTokenResponse
 import org.koin.core.component.KoinComponent
@@ -27,11 +28,13 @@ import org.koin.core.component.inject
 import storage.kvstore
 import java.awt.Desktop
 import java.net.URI
+import java.time.LocalDate
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
 
 
-class EbayAuthController() : KoinComponent {
+class EbayController() : KoinComponent {
 
 
     val store: kvstore by inject<kvstore>()
@@ -110,19 +113,18 @@ class EbayAuthController() : KoinComponent {
     }
 
 
-    suspend fun getResponse(url: String): HttpResponse {
+    suspend fun getResponse(url: String, startDate: String?, endDate: String?): OrderResponse {
         val client = HttpClient(CIO) {
 
 
-            /*
             install(Logging) {
                 logger = object : Logger {
                     override fun log(message: String) {
-                        println("Logging " + message)
+                        println("Logging $message")
                     }
                 }
                 level = LogLevel.HEADERS
-            }*/
+            }
             install(Auth) {
                 bearer {
                     loadTokens {
@@ -174,10 +176,42 @@ class EbayAuthController() : KoinComponent {
                 }
             }
         }
-        val response = client.request(url) {
-            method = HttpMethod.Get
+        val json = Json { ignoreUnknownKeys = true }
+        var response = json.decodeFromString<OrderResponse>(client.get(url) {
+            url {
+                parameters.append("limit","200")
+                if (!startDate.isNullOrEmpty() && !endDate.isNullOrEmpty()) {
+                    encodedParameters.append(
+                        "filter",
+                        "creationdate:%5B" + LocalDateTime.parse(
+                            startDate + "T00:00:00",
+                            DateTimeFormatter.ofPattern("dd.MM.yyyy'T'HH:mm:ss")
+                        ).format(
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+
+                        ) + ".." + LocalDateTime.parse(
+                            endDate + "T00:00:00",
+                            DateTimeFormatter.ofPattern("dd.MM.yyyy'T'HH:mm:ss")
+                        ).format(
+                            DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+
+                        ) + "%5D"
+                    )
+                }
+
+            }
+        }.bodyAsText())
+
+        //Todo this could be implemented with coroutines
+        while(!response.next.isNullOrEmpty()){
+            val nextResponse = json.decodeFromString<OrderResponse>(client.get(response.next!!).bodyAsText())
+            nextResponse.orders.addAll(response.orders)
+            response=nextResponse
         }
 
+        response.orders.sortBy{
+            LocalDateTime.parse(it.creationDate,DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
+        }
         return response
 
     }

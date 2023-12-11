@@ -10,6 +10,7 @@ var href   : String?           = null,
 var total  : Int?              = null,
 var limit  : Int?              = null,
 var offset : Int?              = null,
-var orders : ArrayList<Orders> = arrayListOf()
+var orders : ArrayList<Orders> = arrayListOf(),
+    var next: String?=null
 
 )

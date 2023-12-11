@@ -6,12 +6,9 @@ import androidx.compose.foundation.layout.*
 
 
 import androidx.compose.material.*
-import androidx.compose.material.Button
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 
-import androidx.compose.material.icons.filled.AddCircle
-import androidx.compose.material.icons.filled.Home
-import androidx.compose.material3.DateRangePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.rememberDateRangePickerState
 import androidx.compose.runtime.*
@@ -26,7 +23,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
-import com.ktor.security.EbayAuthController
+import com.ktor.security.EbayController
 import controller.LexofficeController
 import io.ktor.client.statement.*
 import kotlinx.coroutines.*
@@ -80,21 +77,33 @@ object HomeTab : KoinComponent, Tab {
         val orders = rememberSaveable { mutableStateListOf<Orders>() }
         val checkedOrders = rememberSaveable { mutableStateListOf<Orders>() }
         val coroutineScope = rememberCoroutineScope()
-        val ebayAuthController = EbayAuthController()
+        val ebayAuthController = EbayController()
         val checkedAllState = rememberSaveable { mutableStateOf(false) }
         val checkAllEnabled = rememberSaveable { mutableStateOf(false) }
         val isLoading = rememberSaveable { mutableStateOf(false) }
         val loadingProgress = rememberSaveable { mutableStateOf(0F) }
         val openDateRangePicker = rememberSaveable { mutableStateOf(false) }
         val dateRangePickerState = rememberDateRangePickerState()
-        val startDate = dateRangePickerState.selectedStartDateMillis?.let {SimpleDateFormat("dd.MM.yyyy").format(Date.from(Instant.fromEpochMilliseconds(it).toJavaInstant()))}
+        var startDate = dateRangePickerState.selectedStartDateMillis?.let {
+            SimpleDateFormat("dd.MM.yyyy").format(
+                Date.from(
+                    Instant.fromEpochMilliseconds(it).toJavaInstant()
+                )
+            )
+        }
 
-        val endDate = dateRangePickerState.selectedEndDateMillis?.let { SimpleDateFormat("dd.MM.yyyy").format(Date.from(Instant.fromEpochMilliseconds(it).toJavaInstant())) }
+        var endDate = dateRangePickerState.selectedEndDateMillis?.let {
+            SimpleDateFormat("dd.MM.yyyy").format(
+                Date.from(
+                    Instant.fromEpochMilliseconds(it).toJavaInstant()
+                )
+            )
+        }
         val startAndEndDateText = rememberSaveable { mutableStateOf("") }
 
-        startAndEndDateText.value= if(!startDate.isNullOrEmpty() && !endDate.isNullOrEmpty()){
-            startDate + "\n" + endDate
-        }else{
+        startAndEndDateText.value = if (!startDate.isNullOrEmpty() && !endDate.isNullOrEmpty()) {
+            "From:  $startDate\nTo:  $endDate"
+        } else {
             "From: start date\nTo: end date"
         }
 
@@ -134,7 +143,7 @@ object HomeTab : KoinComponent, Tab {
 
         }
 
-        fun getOrders() {
+        fun getOrders(startDate: String?, endDate: String?) {
             checkAllEnabled.value = false
             coroutineScope.launch {
                 val now = LocalDateTime.now()
@@ -154,11 +163,12 @@ object HomeTab : KoinComponent, Tab {
                 orders.clear()
                 checkedOrders.clear()
 
+                val url = "https://api.ebay.com/sell/fulfillment/v1/order"
+
+
                 orders.addAll(
-                    json.decodeFromString<OrderResponse>(
-                        ebayAuthController.getResponse("https://api.ebay.com/sell/fulfillment/v1/order")
-                            .bodyAsText()
-                    ).orders
+
+                    ebayAuthController.getResponse(url, startDate, endDate).orders
                 )
 
                 checkAllEnabled.value = true
@@ -194,21 +204,35 @@ object HomeTab : KoinComponent, Tab {
                             modifier = Modifier.align(Alignment.CenterVertically)
                         )
                     }
-                    Button(onClick = {openDateRangePicker.value=true}){
-                        Text(text = "OpenDateRangePicker")
-                    }
-                    if(openDateRangePicker.value){
-                        datePickerRange(onDismissRequest = {openDateRangePicker.value=false}, state = dateRangePickerState)
+                    ExtendedFloatingActionButton(
+                        onClick = { openDateRangePicker.value = true },
+                        modifier = Modifier.padding(5.dp),
+                        text = { Text("Date Filter") },
+                        icon = { Icon(Icons.Filled.DateRange, "") },
+                        backgroundColor = Color.LightGray
+                    )
+                    if (openDateRangePicker.value) {
+                        datePickerRange(
+                            onDismissRequest = { openDateRangePicker.value = false },
+                            state = dateRangePickerState
+                        )
                     }
 
 
-                    Text(modifier = Modifier.width(120.dp).align(Alignment.CenterVertically),
-                        text=startAndEndDateText.value,
+                    Text(
+                        modifier = Modifier.width(120.dp).align(Alignment.CenterVertically),
+                        text = startAndEndDateText.value,
                         fontWeight = FontWeight.Bold
                     )
-
                     ExtendedFloatingActionButton(
-                        onClick = { getOrders() },
+                        onClick = { startAndEndDateText.value = "From: start date\nTo: end date" ;dateRangePickerState.setSelection(null,null)},
+                        modifier = Modifier.padding(5.dp),
+                        text = { Text("Reset Date") },
+                        icon = { Icon(Icons.Filled.Delete, "") },
+                        backgroundColor = Color.LightGray
+                    )
+                    ExtendedFloatingActionButton(
+                        onClick = { getOrders(startDate, endDate) },
                         modifier = Modifier.padding(5.dp),
                         text = { Text("GetOrders") },
                         icon = { Icon(Icons.Filled.AddCircle, "") },
@@ -233,13 +257,18 @@ object HomeTab : KoinComponent, Tab {
 
                     }
 
-                    Button(onClick = {
-                        makeInvoiceForOrders();println(
-                        "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
+
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            makeInvoiceForOrders();println(
+                            "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
+                        )
+                        },
+                        modifier = Modifier.padding(5.dp).align(Alignment.CenterHorizontally),
+                        text = { Text("Create Invoice") },
+                        icon = { Icon(Icons.Filled.TaskAlt, "") },
+                        backgroundColor = Color.LightGray
                     )
-                    }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-                        Text(text = "Create Invoice from Orders")
-                    }
                 }
 
             }
