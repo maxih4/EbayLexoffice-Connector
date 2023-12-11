@@ -114,16 +114,23 @@ object HomeTab : KoinComponent, Tab {
             loadingProgress.value = 0F
             val progressSize: Float = (1F / checkedOrders.size)
             checkedOrders.forEach {
+                var lastName = ""
+                var firstName = ""
+                if (it.buyer?.buyerRegistrationAddress?.fullName?.contains(" ") == true) {
+                    lastName = it.buyer?.buyerRegistrationAddress?.fullName?.split(" ")!![1]
+                    firstName = it.buyer?.buyerRegistrationAddress?.fullName?.split(" ")!![0]
+                } else {
+                    lastName = it.buyer?.username.toString()
 
-
+                }
                 coroutineScope.launch {
                     val contactId = lexofficeController.getContactOrCreateNew(
-                        lastName = it.buyer?.buyerRegistrationAddress?.fullName?.split(" ")!![1],
-                        firstName = it.buyer?.buyerRegistrationAddress?.fullName?.split(" ")!![0],
+                        lastName = lastName,
+                        firstName = firstName,
                         email = it.buyer?.buyerRegistrationAddress?.email.orEmpty(),
                         city = it.buyer?.buyerRegistrationAddress?.contactAddress?.city!!,
                         countryCode = it.buyer?.buyerRegistrationAddress?.contactAddress?.countryCode!!,
-                        street = it.buyer?.buyerRegistrationAddress?.contactAddress?.addressLine1!!,
+                        street = it.buyer?.buyerRegistrationAddress?.contactAddress?.addressLine1.orEmpty(),
                         supplement = "",
                         zip = it.buyer?.buyerRegistrationAddress?.contactAddress?.postalCode!!
                     )
@@ -225,7 +232,10 @@ object HomeTab : KoinComponent, Tab {
                         fontWeight = FontWeight.Bold
                     )
                     ExtendedFloatingActionButton(
-                        onClick = { startAndEndDateText.value = "From: start date\nTo: end date" ;dateRangePickerState.setSelection(null,null)},
+                        onClick = {
+                            startAndEndDateText.value =
+                                "From: start date\nTo: end date";dateRangePickerState.setSelection(null, null)
+                        },
                         modifier = Modifier.padding(5.dp),
                         text = { Text("Reset Date") },
                         icon = { Icon(Icons.Filled.Delete, "") },

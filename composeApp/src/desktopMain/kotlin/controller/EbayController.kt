@@ -18,7 +18,8 @@ import io.ktor.server.engine.*
 import io.ktor.server.netty.*
 import io.ktor.server.response.*
 import io.ktor.server.routing.*
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.*
+import kotlinx.datetime.Clock
 import kotlinx.serialization.json.*
 import model.ebay.OrderResponse
 import model.ebay.RefreshTokenResponse
@@ -114,6 +115,7 @@ class EbayController() : KoinComponent {
 
 
     suspend fun getResponse(url: String, startDate: String?, endDate: String?): OrderResponse {
+        val starttime=Clock.System.now()
         val client = HttpClient(CIO) {
 
 
@@ -179,7 +181,7 @@ class EbayController() : KoinComponent {
         val json = Json { ignoreUnknownKeys = true }
         var response = json.decodeFromString<OrderResponse>(client.get(url) {
             url {
-                parameters.append("limit","200")
+                parameters.append("limit", "200")
                 if (!startDate.isNullOrEmpty() && !endDate.isNullOrEmpty()) {
                     encodedParameters.append(
                         "filter",
@@ -202,20 +204,47 @@ class EbayController() : KoinComponent {
             }
         }.bodyAsText())
 
-        //Todo this could be implemented with coroutines
-        while(!response.next.isNullOrEmpty()){
-            val nextResponse = json.decodeFromString<OrderResponse>(client.get(response.next!!).bodyAsText())
-            nextResponse.orders.addAll(response.orders)
-            response=nextResponse
-        }
 
-        response.orders.sortBy{
-            LocalDateTime.parse(it.creationDate,DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
+
+        if (!response.next.isNullOrEmpty()) {
+            val count = (response.total!!.toInt() / 200) + 1
+            val rest = response.total!!.toInt().mod(200)
+
+
+            val resultList = mutableListOf<Deferred<OrderResponse>>()
+            for (i in 1..count) {
+
+                resultList.add(CoroutineScope(Dispatchers.IO).async {
+                    if (i == count) {
+                        json.decodeFromString<OrderResponse>(
+                            client.get(response.href!!.dropLast(1).plus(rest)).bodyAsText()
+                        )
+                    } else {
+
+                        json.decodeFromString<OrderResponse>(
+                            client.get(response.href!!.dropLast(1).plus(200 * i)).bodyAsText()
+                        )
+                    }
+                })
+
+            }
+            val awaitedList = resultList.awaitAll()
+            awaitedList.forEach {
+                response.orders.addAll(it.orders)
+            }
+            response.orders.sortBy {
+                LocalDateTime.parse(it.creationDate, DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'"))
+            }
+
+
         }
+        val time = starttime-Clock.System.now()
+        println("IT took me $time")
         return response
 
     }
-
 }
+
+
 
 
