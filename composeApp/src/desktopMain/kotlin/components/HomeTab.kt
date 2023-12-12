@@ -3,6 +3,7 @@ package components
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 
 
 import androidx.compose.material.*
@@ -72,7 +73,6 @@ object HomeTab : KoinComponent, Tab {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     @Preview
-
     override fun Content() {
         val orders = rememberSaveable { mutableStateListOf<Orders>() }
         val checkedOrders = rememberSaveable { mutableStateListOf<Orders>() }
@@ -253,33 +253,35 @@ object HomeTab : KoinComponent, Tab {
                 }
 
 
-                if (orders.isNotEmpty()) {
-                    OrderTableHeader()
+                    if (orders.isNotEmpty()) {
 
-                    orders.forEach {
-                        OrderCompose(it, checkedOrders, onCheckedChange = {
-                            if (checkedOrders.contains(it)) {
-                                checkedOrders.remove(it)
-                            } else {
-                                checkedOrders.add(it)
-                            }
-                        })
+                        OrderTableHeader()
 
+                        orders.forEach {
+                            OrderCompose(it, checkedOrders, onCheckedChange = {
+                                if (checkedOrders.contains(it)) {
+                                    checkedOrders.remove(it)
+                                } else {
+                                    checkedOrders.add(it)
+                                }
+                            })
+
+
+                        }
+
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                makeInvoiceForOrders();println(
+                                "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
+                            )
+                            },
+                            modifier = Modifier.padding(5.dp).align(Alignment.CenterHorizontally),
+                            text = { Text("Create Invoice") },
+                            icon = { Icon(Icons.Filled.TaskAlt, "") },
+                            backgroundColor = Color.LightGray
+                        )
                     }
 
-
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            makeInvoiceForOrders();println(
-                            "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
-                        )
-                        },
-                        modifier = Modifier.padding(5.dp).align(Alignment.CenterHorizontally),
-                        text = { Text("Create Invoice") },
-                        icon = { Icon(Icons.Filled.TaskAlt, "") },
-                        backgroundColor = Color.LightGray
-                    )
-                }
 
             }
             if (isLoading.value) {
