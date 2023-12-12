@@ -38,8 +38,8 @@ import java.time.temporal.ChronoUnit
 class EbayController() : KoinComponent {
 
 
-    val store: kvstore by inject<kvstore>()
-    val settings = store.settings
+    private val store: kvstore by inject<kvstore>()
+    private val settings = store.settings
 
 
     fun openBrowser() {
@@ -63,27 +63,15 @@ class EbayController() : KoinComponent {
                 get("/") {
                     authToken = call.parameters["code"].toString()
                     println(authToken)
-                    call.respondText("Authentifizierung erfolgreich. Sie können diesen Tab nun schließen und zurück zur Anwendung gehen.")
+                    call.respondText("Authentification done. You can close this window and go back to the application")
                     val client = HttpClient(CIO) {
 
                     }
-                    val response = client.request("https://api.ebay.com/identity/v1/oauth2/token") {
-                        method = HttpMethod.Post
-                        headers {
-                            append(HttpHeaders.ContentType, "application/x-www-form-urlencoded")
-                            append(
-                                HttpHeaders.Authorization,
-                                "Basic TWF4SGFuZGstTGV4b2ZmaWMtUFJELThkNGE4ODZmNS0zYWQ4NjdiODpQUkQtZDRhODg2ZjVkMjJjLWEzZjktNGVkYS1hYWY4LTgzN2Q="
-                            )
-                        }
-                        contentType(ContentType.Application.FormUrlEncoded)
-                        setBody(FormDataContent(Parameters.build {
-                            append("grant_type", "authorization_code")
-                            append("code", authToken)
-                            append("redirect_uri", "Max_Handke-MaxHandk-Lexoff-nolrf")
+                    val response = client.get("https://ktorbackendauth.onrender.com/auth") {
 
+                        url{
+                            parameters.append("code",authToken)
                         }
-                        ))
 
                     }
 
@@ -142,23 +130,13 @@ class EbayController() : KoinComponent {
                         try {
 
 
-                            val refreshTokenResponse = Json.decodeFromString<RefreshTokenResponse>(client.submitForm(
-                                url = "https://api.ebay.com/identity/v1/oauth2/token",
-                                formParameters = parameters {
-                                    append("grant_type", "refresh_token")
-                                    append("refresh_token", oldTokens?.refreshToken ?: "")
 
-
-                                }) {
-                                headers {
-                                    append(
-                                        HttpHeaders.Authorization,
-                                        "Basic TWF4SGFuZGstTGV4b2ZmaWMtUFJELThkNGE4ODZmNS0zYWQ4NjdiODpQUkQtZDRhODg2ZjVkMjJjLWEzZjktNGVkYS1hYWY4LTgzN2Q="
-                                    )
+                            val refreshTokenResponse = Json.decodeFromString<RefreshTokenResponse>(client.get("https://ktorbackendauth.onrender.com/refresh"){
+                                url{
+                                    parameters.append("refreshToken",oldTokens!!.refreshToken)
                                 }
                                 markAsRefreshTokenRequest()
-                            }.bodyAsText()
-                            )
+                            }.bodyAsText())
 
                             println("Ausgeführt und Antwort erhalten $refreshTokenResponse")
                             settings.putString("access_token", refreshTokenResponse.access_token)
@@ -172,7 +150,7 @@ class EbayController() : KoinComponent {
                             oldTokens?.refreshToken!!
                         )
                     }
-                    sendWithoutRequest { request -> request.url.toString() != "https://api.ebay.com/identity/v1/oauth2/token" }
+                    //sendWithoutRequest { request -> request.url.toString() != "https://api.ebay.com/identity/v1/oauth2/token" }
 
 
                 }
