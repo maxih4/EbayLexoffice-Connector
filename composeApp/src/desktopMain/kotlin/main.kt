@@ -20,7 +20,7 @@ fun main() = application {
     val state = rememberWindowState(placement = WindowPlacement.Floating)
     state.size= DpSize(900.dp,900.dp)
 
-    Window(onCloseRequest = ::exitApplication,state, resizable = false) {
+    Window(onCloseRequest = ::exitApplication,state, resizable = true) {
 
         startKoin{
             modules(appModule)
@@ -30,9 +30,3 @@ fun main() = application {
     }
 }
 
-@Preview
-@Composable
-fun AppDesktopPreview() {
-
-    App()
-}

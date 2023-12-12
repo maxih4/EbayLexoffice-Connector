@@ -58,12 +58,12 @@ class EbayController() : KoinComponent {
         var authToken: String
         var userToken = UserAccessTokenResponse()
         println("Jetzt sind wir in der openServer funktion")
-        val server = embeddedServer(Netty, port = 5000, module = fun Application.() {
+        val server = embeddedServer(Netty, port = 51234, module = fun Application.() {
             routing {
                 get("/") {
                     authToken = call.parameters["code"].toString()
                     println(authToken)
-                    call.respondText("Authentifizierung erfolgreich")
+                    call.respondText("Authentifizierung erfolgreich. Sie können diesen Tab nun schließen und zurück zur Anwendung gehen.")
                     val client = HttpClient(CIO) {
 
                     }
