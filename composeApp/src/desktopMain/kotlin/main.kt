@@ -20,7 +20,7 @@ fun main() = application {
     val state = rememberWindowState(placement = WindowPlacement.Floating)
     state.size= DpSize(900.dp,900.dp)
 
-    Window(onCloseRequest = ::exitApplication,state, resizable = true) {
+    Window(onCloseRequest = ::exitApplication,state, resizable = true, title = "Ebay Lexoffice Connector") {
 
         startKoin{
             modules(appModule)
