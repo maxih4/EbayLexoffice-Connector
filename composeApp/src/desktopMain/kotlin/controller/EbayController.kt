@@ -40,6 +40,7 @@ class EbayController() : KoinComponent {
 
     private val store: kvstore by inject<kvstore>()
     private val settings = store.settings
+    private val backendUrl = "https://ebaylexofficeconnector.azurewebsites.net"
 
 
     fun openBrowser() {
@@ -67,7 +68,7 @@ class EbayController() : KoinComponent {
                     val client = HttpClient(CIO) {
 
                     }
-                    val response = client.get("https://ktorbackendauth.onrender.com/auth") {
+                    val response = client.get("$backendUrl/auth") {
 
                         url{
                             parameters.append("code",authToken)
@@ -131,7 +132,7 @@ class EbayController() : KoinComponent {
 
 
 
-                            val refreshTokenResponse = Json.decodeFromString<RefreshTokenResponse>(client.get("https://ktorbackendauth.onrender.com/refresh"){
+                            val refreshTokenResponse = Json.decodeFromString<RefreshTokenResponse>(client.get("$backendUrl/refresh"){
                                 url{
                                     parameters.append("refreshToken",oldTokens!!.refreshToken)
                                 }
