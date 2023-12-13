@@ -4,6 +4,7 @@ import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
+import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -43,6 +44,7 @@ fun OrdersAreLoadingDialog(onDismissRequest: () -> Unit,progress: Float) {
                     thumbOffset = 1.5.dp,
                     progress = progress
                 )
+
             }
         }
     }

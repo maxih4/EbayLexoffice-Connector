@@ -84,7 +84,7 @@ object HomeTab : KoinComponent, Tab {
         val loadingProgress = rememberSaveable { mutableStateOf(0F) }
         val openDateRangePicker = rememberSaveable { mutableStateOf(false) }
         val dateRangePickerState = rememberDateRangePickerState()
-        var startDate = dateRangePickerState.selectedStartDateMillis?.let {
+        val startDate = dateRangePickerState.selectedStartDateMillis?.let {
             SimpleDateFormat("dd.MM.yyyy").format(
                 Date.from(
                     Instant.fromEpochMilliseconds(it).toJavaInstant()
@@ -92,7 +92,7 @@ object HomeTab : KoinComponent, Tab {
             )
         }
 
-        var endDate = dateRangePickerState.selectedEndDateMillis?.let {
+        val endDate = dateRangePickerState.selectedEndDateMillis?.let {
             SimpleDateFormat("dd.MM.yyyy").format(
                 Date.from(
                     Instant.fromEpochMilliseconds(it).toJavaInstant()
