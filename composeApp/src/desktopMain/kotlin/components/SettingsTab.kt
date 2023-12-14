@@ -30,6 +30,7 @@ import controller.MailController
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import kotlinx.coroutines.*
+import kotlinx.datetime.Clock
 import model.ebay.OrderResponse
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -97,7 +98,7 @@ object SettingsTab : KoinComponent, Tab {
             }) {
 
             Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally),
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
 
@@ -119,43 +120,48 @@ object SettingsTab : KoinComponent, Tab {
                         IconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
                             Icon(imageVector = image, description)
                         }
-                    }
+                    },
+                    modifier = Modifier.weight(0.8f)
                 )
                 ExtendedFloatingActionButton(
                     onClick = { openBrowserApiKey() },
-                    modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically),
+                    modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically).weight(0.8f),
 
                     text = { Text("Get Api Key") },
                     icon = { Icon(Icons.Filled.AddCircle, "") },
-                    backgroundColor = Color.LightGray
+                    backgroundColor = Color.LightGray,
+
                 )
 
 
             }
             Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp),
-                horizontalArrangement = Arrangement.SpaceBetween
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
             ) {
 
                 OutlinedTextField(
                     value = host,
                     onValueChange = { host = it;settings.putString("smtpHost", it) },
                     label = { Text("SMTP Host") },
+                    modifier = Modifier.weight(0.8f)
                 )
                 OutlinedTextField(
                     value = port,
                     onValueChange = { port = it;settings.putString("port", it) },
                     label = { Text("SMTP Port") },
+                    modifier = Modifier.weight(0.8f)
                 )
             }
             Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp),
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
                 OutlinedTextField(
                     value = usernameSMTP,
                     onValueChange = { usernameSMTP = it;settings.putString("usernameSMTP", it) },
                     label = { Text("SMTP Username") },
+                    modifier = Modifier.weight(0.8f)
                 )
                 OutlinedTextField(
                     value = passwordSMTP,
@@ -172,8 +178,10 @@ object SettingsTab : KoinComponent, Tab {
                         IconButton(onClick = { passwordSMTPVisible = !passwordSMTPVisible }) {
                             Icon(imageVector = image, description)
                         }
-                    }
-                )
+                    },
+                    modifier = Modifier.weight(0.8f)
+                )}
+            Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center){
                 ExtendedFloatingActionButton(
                     onClick = {
                         coroutineScope.launch {
@@ -196,12 +204,14 @@ object SettingsTab : KoinComponent, Tab {
 
     private suspend fun sendMail() {
         val mailList = mutableListOf<Deferred<Job>>()
+        val starttime=Clock.System.now()
+        println("Start sending mails")
         for (i in 1..20) {
 
-            mailList.add(CoroutineScope(Dispatchers.Unconfined).async {
+            mailList.add(CoroutineScope(Dispatchers.Default).async{
                 mailController.sendMail(
-                    from = "Test@test.de",
-                    to = "test@test.de",
+                    from = "",
+                    to = "",
                     "TestMail $i",
                     "<3"
                 )
@@ -210,7 +220,9 @@ object SettingsTab : KoinComponent, Tab {
         }
         val awaitedList = mailList.awaitAll().joinAll()
 
-            println("ALl 20 mails Sent $awaitedList")
+        val time = starttime- Clock.System.now()
+        println("Sending $20 mails took me $time")
+
         }
 
     }
