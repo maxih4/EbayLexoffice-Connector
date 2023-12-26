@@ -216,8 +216,8 @@ object SettingsTab : KoinComponent, Tab {
 
             mailList.add(CoroutineScope(Dispatchers.Default).async {
                 mailController.sendMail(
-                    from = "handkemax@gmail.com",
-                    to = "max.handke99@gmail.com",
+                    from = "",
+                    to = "",
                     "TestMail $i",
                     "<3"
                 )
