@@ -9,11 +9,10 @@ import kotlinx.coroutines.Job
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.simplejavamail.api.mailer.config.TransportStrategy
-import storage.kvstore
 
 
 class MailController : KoinComponent {
-    private val store: kvstore by inject()
+    private val store: StorageController by inject()
     private val settings = store.settings
 
     private val host = settings.getString("smtpHost", "")

@@ -9,7 +9,6 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
-import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -23,7 +22,6 @@ import model.lexoffice.*
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import storage.kvstore
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.time.Duration.Companion.seconds
@@ -31,7 +29,7 @@ import kotlin.time.toJavaDuration
 
 
 class LexofficeController : KoinComponent {
-    private val store: kvstore by inject()
+    private val store: StorageController by inject()
     private val settings = store.settings
     private val json = Json {
         ignoreUnknownKeys = true

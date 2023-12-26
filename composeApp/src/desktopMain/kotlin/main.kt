@@ -1,23 +1,18 @@
-import androidx.compose.desktop.ui.tooling.preview.Preview
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.unit.DpSize
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPlacement
 import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import controller.LexofficeController
 import controller.MailController
+import controller.StorageController
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.dsl.module
-import storage.kvstore
 import java.awt.Dimension
 
 
 fun main() = application {
     val appModule = module {
-        single {kvstore()}
+        single { StorageController() }
         single{ LexofficeController()}
         single{ MailController() }
     }

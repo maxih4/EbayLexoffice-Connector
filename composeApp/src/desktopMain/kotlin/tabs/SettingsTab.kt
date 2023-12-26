@@ -1,17 +1,13 @@
-package components
+package tabs
+
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
-
-
 import androidx.compose.foundation.text.KeyboardOptions
-
 import androidx.compose.material.*
-
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
-
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
@@ -27,20 +23,16 @@ import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
 import controller.MailController
-import io.ktor.client.request.*
-import io.ktor.client.statement.*
+import controller.StorageController
 import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
-import model.ebay.OrderResponse
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import storage.kvstore
 import java.awt.Desktop
-
 import java.net.URI
 
 object SettingsTab : KoinComponent, Tab {
-    private val store: kvstore by inject()
+    private val store: StorageController by inject()
     private val settings = store.settings
     private val mailController: MailController by inject()
 
@@ -76,15 +68,14 @@ object SettingsTab : KoinComponent, Tab {
     @Preview
     override fun Content() {
         val coroutineScope = rememberCoroutineScope()
-        var apiKey by rememberSaveable { mutableStateOf(settings.getString("apiKey", "")) }
+        var apiKey by mutableStateOf(settings.getString("apiKey", ""))
         var apiKeyVisible by rememberSaveable { mutableStateOf(false) }
-        var passwordSMTP by rememberSaveable { mutableStateOf(settings.getString("passwordSMTP", "")) }
+        var passwordSMTP by mutableStateOf(settings.getString("passwordSMTP", ""))
         var passwordSMTPVisible by rememberSaveable { mutableStateOf(false) }
-        var usernameSMTP by rememberSaveable { mutableStateOf(settings.getString("usernameSMTP", "")) }
-        var host by rememberSaveable { mutableStateOf(settings.getString("smtpHost", "")) }
-        var port by rememberSaveable { mutableStateOf(settings.getString("port", "")) }
-
-
+        var usernameSMTP by mutableStateOf(settings.getString("usernameSMTP", ""))
+        var host by mutableStateOf(settings.getString("smtpHost", ""))
+        var port by mutableStateOf(settings.getString("port", ""))
+        var reset by mutableStateOf(false)
 
         val localFocusManager = LocalFocusManager.current
 
@@ -121,17 +112,19 @@ object SettingsTab : KoinComponent, Tab {
                             Icon(imageVector = image, description)
                         }
                     },
-                    modifier = Modifier.weight(0.8f)
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
                 )
-                ExtendedFloatingActionButton(
-                    onClick = { openBrowserApiKey() },
-                    modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically).weight(0.8f),
+                Box(modifier = Modifier.align(Alignment.CenterVertically).weight(0.8f)) {
+                    ExtendedFloatingActionButton(
+                        onClick = { openBrowserApiKey() },
+                        modifier = Modifier.padding(start = 10.dp).align(Alignment.Center),
 
-                    text = { Text("Get Api Key") },
-                    icon = { Icon(Icons.Filled.AddCircle, "") },
-                    backgroundColor = Color.LightGray,
+                        text = { Text("Get Api Key") },
+                        icon = { Icon(Icons.Filled.AddCircle, "") },
+                        backgroundColor = Color.LightGray,
 
-                )
+                        )
+                }
 
 
             }
@@ -144,13 +137,13 @@ object SettingsTab : KoinComponent, Tab {
                     value = host,
                     onValueChange = { host = it;settings.putString("smtpHost", it) },
                     label = { Text("SMTP Host") },
-                    modifier = Modifier.weight(0.8f)
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
                 )
                 OutlinedTextField(
                     value = port,
                     onValueChange = { port = it;settings.putString("port", it) },
                     label = { Text("SMTP Port") },
-                    modifier = Modifier.weight(0.8f)
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
                 )
             }
             Row(
@@ -161,7 +154,7 @@ object SettingsTab : KoinComponent, Tab {
                     value = usernameSMTP,
                     onValueChange = { usernameSMTP = it;settings.putString("usernameSMTP", it) },
                     label = { Text("SMTP Username") },
-                    modifier = Modifier.weight(0.8f)
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
                 )
                 OutlinedTextField(
                     value = passwordSMTP,
@@ -179,9 +172,10 @@ object SettingsTab : KoinComponent, Tab {
                             Icon(imageVector = image, description)
                         }
                     },
-                    modifier = Modifier.weight(0.8f)
-                )}
-            Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center){
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
+                )
+            }
+            Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                 ExtendedFloatingActionButton(
                     onClick = {
                         coroutineScope.launch {
@@ -195,23 +189,35 @@ object SettingsTab : KoinComponent, Tab {
                     icon = { Icon(Icons.Filled.Send, "") },
                     backgroundColor = Color.LightGray
                 )
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        store.settings.clear()
+                        reset=!reset
+                    },
+                    modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically),
+
+                    text = { Text("Reset Cache and Saved Data") },
+                    icon = { Icon(Icons.Filled.Delete, "") },
+                    backgroundColor = Color.LightGray
+                )}
+
             }
 
 
 
-        }
+        LaunchedEffect(reset){}
     }
 
     private suspend fun sendMail() {
         val mailList = mutableListOf<Deferred<Job>>()
-        val starttime=Clock.System.now()
+        val starttime = Clock.System.now()
         println("Start sending mails")
         for (i in 1..20) {
 
-            mailList.add(CoroutineScope(Dispatchers.Default).async{
+            mailList.add(CoroutineScope(Dispatchers.Default).async {
                 mailController.sendMail(
-                    from = "",
-                    to = "",
+                    from = "handkemax@gmail.com",
+                    to = "max.handke99@gmail.com",
                     "TestMail $i",
                     "<3"
                 )
@@ -220,11 +226,11 @@ object SettingsTab : KoinComponent, Tab {
         }
         val awaitedList = mailList.awaitAll().joinAll()
 
-        val time = starttime- Clock.System.now()
+        val time = starttime - Clock.System.now()
         println("Sending $20 mails took me $time")
 
-        }
-
     }
+
+}
 
 

@@ -1,33 +1,16 @@
-import androidx.compose.foundation.*
-
-import androidx.compose.foundation.VerticalScrollbar
-import androidx.compose.foundation.layout.*
-
-
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
-
-import androidx.compose.runtime.*
-
-
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
-
 import cafe.adriel.voyager.navigator.tab.*
+import tabs.HomeTab
+import tabs.SettingsTab
 
 
-import components.HomeTab
-
-import components.SettingsTab
-
-
-
-
-
-
-
-
-    @Composable
+@Composable
     private fun RowScope.TabNavigationItem(tab: Tab) {
         val tabNavigator = LocalTabNavigator.current
 
@@ -47,7 +30,7 @@ import components.SettingsTab
             tabDisposable = {
                 TabDisposable(
                     navigator = it,
-                    tabs = listOf(HomeTab,SettingsTab)
+                    tabs = listOf(HomeTab, SettingsTab)
                 )
             }
         ) { tabNavigator ->

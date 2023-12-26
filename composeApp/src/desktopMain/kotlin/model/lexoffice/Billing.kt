@@ -3,7 +3,6 @@ package model.lexoffice
 
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
-import java.util.*
 
 @Serializable
 data class Billing(

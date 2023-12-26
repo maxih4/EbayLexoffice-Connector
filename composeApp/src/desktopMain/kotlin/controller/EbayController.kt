@@ -1,18 +1,14 @@
 package com.ktor.security
 
 
+import controller.StorageController
 import io.ktor.client.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.logging.*
-
-
 import io.ktor.client.request.*
-import io.ktor.client.request.forms.*
 import io.ktor.client.statement.*
-import io.ktor.http.*
-
 import io.ktor.server.application.*
 import io.ktor.server.engine.*
 import io.ktor.server.netty.*
@@ -20,16 +16,14 @@ import io.ktor.server.response.*
 import io.ktor.server.routing.*
 import kotlinx.coroutines.*
 import kotlinx.datetime.Clock
-import kotlinx.serialization.json.*
+import kotlinx.serialization.json.Json
 import model.ebay.OrderResponse
 import model.ebay.RefreshTokenResponse
 import model.ebay.UserAccessTokenResponse
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import storage.kvstore
 import java.awt.Desktop
 import java.net.URI
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.ChronoUnit
@@ -38,7 +32,7 @@ import java.time.temporal.ChronoUnit
 class EbayController() : KoinComponent {
 
 
-    private val store: kvstore by inject<kvstore>()
+    private val store: StorageController by inject<StorageController>()
     private val settings = store.settings
     private val backendUrl = "https://ebaylexofficeconnector.azurewebsites.net"
 
