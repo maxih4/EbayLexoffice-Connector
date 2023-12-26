@@ -5,3 +5,6 @@ Goal of the project is to generate Invoices in Lexoffice from your Ebay Orders o
 
 
 
+# NOT READY YET
+
+The project is still under developement and not ready for production yet!
