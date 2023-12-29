@@ -13,6 +13,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -30,6 +31,7 @@ import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import java.awt.Desktop
 import java.net.URI
+import kotlin.io.path.Path
 
 object SettingsTab : KoinComponent, Tab {
     private val store: StorageController by inject()
@@ -219,7 +221,9 @@ object SettingsTab : KoinComponent, Tab {
                     from = "",
                     to = "",
                     "TestMail $i",
-                    "<3"
+                    "<3",
+                    fileName="",
+                    filePath = Path("")
                 )
             })
 

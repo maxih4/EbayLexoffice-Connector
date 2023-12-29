@@ -4,6 +4,7 @@ import com.sletmoe.bucket4k.SuspendingBucket
 import io.github.bucket4j.Bandwidth
 import io.github.bucket4j.TimeMeter
 import io.ktor.client.*
+import io.ktor.client.call.*
 import io.ktor.client.engine.cio.*
 import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
@@ -13,6 +14,7 @@ import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
 import io.ktor.serialization.kotlinx.json.*
+import io.ktor.util.cio.*
 
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.encodeToJsonElement
@@ -22,8 +24,11 @@ import model.lexoffice.*
 
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.nio.file.Path
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
+import kotlin.io.encoding.Base64
+import kotlin.io.encoding.ExperimentalEncodingApi
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -210,7 +215,8 @@ class LexofficeController : KoinComponent {
 
         val createInvoiceResponse =
             json.decodeFromString<CreationResponse>(lexofficeClient.post("https://api.lexoffice.io/v1/invoices") {
-                url { parameters.append("finalize", "false") }
+                url { parameters.append("finalize", "true") }
+                //Todo parameter to settings
                 contentType(ContentType.Application.Json)
                 setBody(Json.encodeToJsonElement(newInvoice))
             }.bodyAsText())
@@ -226,6 +232,28 @@ class LexofficeController : KoinComponent {
         ret = 100 - ret!!
         ret = (Math.round(ret * 100.0) / 100.0).toFloat()
         return ret
+    }
+
+    suspend fun renderInvoice(url: String): String? {
+        tokenBucket.consume(1)
+
+        val renderInvoiceResponse=
+            json.decodeFromString<RenderInvoiceResponse>(lexofficeClient.get(url).bodyAsText())
+        println("RenderInvoiceResponse = $renderInvoiceResponse")
+        return renderInvoiceResponse.documentFileId
+    }
+
+    @OptIn(ExperimentalEncodingApi::class)
+    suspend fun downloadInvoiceAsPdf(documentFileId: String): Path {
+       val path= kotlin.io.path.createTempFile(prefix = "temp-invoice", suffix = ".pdf")
+        tokenBucket.consume(1)
+        path.toFile().writeBytes(Base64.decode(lexofficeClient.get("https://api.lexoffice.io/v1/files/$documentFileId").bodyAsText()))
+        println("Writing to file done. Path = $path")
+        return path
+    }
+
+    fun deletePdf(path:Path){
+        path.toFile().delete()
     }
 
 

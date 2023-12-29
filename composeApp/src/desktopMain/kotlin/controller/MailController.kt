@@ -5,10 +5,12 @@ import at.quickme.kotlinmailer.delivery.MailerManager
 import at.quickme.kotlinmailer.delivery.mailerBuilder
 import at.quickme.kotlinmailer.delivery.send
 import at.quickme.kotlinmailer.email.emailBuilder
+import jakarta.activation.FileDataSource
 import kotlinx.coroutines.Job
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
 import org.simplejavamail.api.mailer.config.TransportStrategy
+import java.nio.file.Path
 
 
 class MailController : KoinComponent {
@@ -28,7 +30,7 @@ class MailController : KoinComponent {
             )
         }
 
-    suspend fun sendMail(from: String, to: String, subject: String, content: String): Job {
+    suspend fun sendMail(from: String, to: String, subject: String, content: String,fileName: String,filePath: Path): Job {
         MailerManager.defaultMailer = mailer
         val email = emailBuilder {
             from(from)
@@ -36,6 +38,7 @@ class MailController : KoinComponent {
 
             withSubject(subject)
             withPlainText(content)
+            withAttachment(fileName,FileDataSource(filePath.toFile()))
         }
         return email.send()
 

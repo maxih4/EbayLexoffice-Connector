@@ -30,6 +30,7 @@ import components.OrderTableHeader
 import components.OrdersAreLoadingDialog
 import components.datePickerRange
 import controller.LexofficeController
+import controller.MailController
 import controller.StorageController
 import kotlinx.coroutines.launch
 import kotlinx.datetime.Instant
@@ -47,6 +48,7 @@ object HomeTab : KoinComponent, Tab {
     private val store: StorageController by inject()
     private val settings = store.settings
     private val lexofficeController: LexofficeController by inject()
+    private val mailController: MailController by inject()
 
 
     private fun readResolve(): Any = HomeTab
@@ -80,6 +82,7 @@ object HomeTab : KoinComponent, Tab {
         val coroutineScope = rememberCoroutineScope()
         val ebayAuthController = EbayController()
         val checkedAllState = rememberSaveable { mutableStateOf(false) }
+        val checkedSendMailState = rememberSaveable { mutableStateOf(false) }
         val checkAllEnabled = rememberSaveable { mutableStateOf(false) }
         val isLoading = rememberSaveable { mutableStateOf(false) }
         val loadingProgress = rememberSaveable { mutableStateOf(0F) }
@@ -109,7 +112,7 @@ object HomeTab : KoinComponent, Tab {
         }
 
 
-        fun makeInvoiceForOrders() {
+        fun createContactGenerateInvoiceAndSendMail(sendEmail: Boolean) {
             //Todo Fehler wenn checked Orders leer
             isLoading.value = true
             loadingProgress.value = 0F
@@ -138,7 +141,25 @@ object HomeTab : KoinComponent, Tab {
                     val output = lexofficeController.createInvoiceFromOrder(it, contactId)
 
                     println("Outcome: $output")
+                    if(sendEmail){
+                        //Generate documentFileId
+                        val documentFileId = lexofficeController.renderInvoice(output.resourceUri + "/document")
+                        println("DocumentFileId: $documentFileId")
+                        //Download and save temp PDF
+                        val tempPdfPath = lexofficeController.downloadInvoiceAsPdf(documentFileId.orEmpty())
+                        //Send Mail to Customer
+                        mailController.sendMail(
+                            from = settings.getString("usernameSMTP",""),
+                            to = "", //Todo
+                            "Invoice for order ${it.orderId}",
+                            "<3",
+                            fileName = "invoice-${it.orderId}",
+                            filePath = tempPdfPath
+                        ).join()
 
+                        //Delete temp pdf
+                        lexofficeController.deletePdf(tempPdfPath)
+                    }
                     loadingProgress.value += progressSize
 
                     if (loadingProgress.value >= 1) {
@@ -269,18 +290,39 @@ object HomeTab : KoinComponent, Tab {
 
 
                         }
-
-                        ExtendedFloatingActionButton(
-                            onClick = {
-                                makeInvoiceForOrders();println(
-                                "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
+                        Row(modifier=Modifier.fillMaxWidth().padding(top=5.dp),
+                            horizontalArrangement = Arrangement.SpaceEvenly){
+                            ExtendedFloatingActionButton(
+                                onClick = {
+                                    createContactGenerateInvoiceAndSendMail(checkedSendMailState.value);
+                                    //TODO Add Email sending to the users
+                                    println(
+                                    "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
+                                )
+                                },
+                                modifier = Modifier.padding(5.dp),
+                                text = { Text("Create Invoice") },
+                                icon = { Icon(Icons.Filled.TaskAlt, "") },
+                                backgroundColor = Color.LightGray
                             )
-                            },
-                            modifier = Modifier.padding(5.dp).align(Alignment.CenterHorizontally),
-                            text = { Text("Create Invoice") },
-                            icon = { Icon(Icons.Filled.TaskAlt, "") },
-                            backgroundColor = Color.LightGray
-                        )
+                            Row(modifier = Modifier.padding(5.dp)) {
+                                Checkbox(
+                                checked = checkedSendMailState.value,
+
+                                onCheckedChange = {
+                                    checkedSendMailState.value=!checkedSendMailState.value
+
+                                }
+                            )
+                                Text(
+                                    "Send invoice per mail to customers",
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                )
+
+                            }
+
+                        }
+
                     }
 
 
