@@ -206,15 +206,15 @@ class LexofficeController : KoinComponent {
             totalPrice = TotalPrice(currency = order.totalFeeBasisAmount?.currency),
             paymentConditions =
             PaymentConditions(
-                paymentTermLabel = "Sobald der Gesamtbetrag bei uns eingegangen ist, wird die Ware von uns verschickt.", //Todo Settings
+                paymentTermLabel = settings.getString("paymentTermLabel","Sobald der Gesamtbetrag bei uns eingegangen ist, wird die Ware von uns verschickt."),
                 paymentDiscountConditions = null,//Todo Settings
-                paymentTermDuration = 14 //Todo Settings
+                paymentTermDuration = settings.getString("paymentTermDuration","14").toInt()
             ),
             shippingConditions = ShippingConditions(
                 shippingType = "delivery", shippingDate = ZonedDateTime.parse(
                     order.creationDate,
                     DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSX")
-                ).plusDays(5L)//Todo Settings
+                ).plusDays(settings.getString("shippingDateDays","5").toLong())
                     .format(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSZZZZZ")).toString()
             )
         )
@@ -223,8 +223,8 @@ class LexofficeController : KoinComponent {
 
         val createInvoiceResponse =
             json.decodeFromString<CreationResponse>(lexofficeClient.post("https://api.lexoffice.io/v1/invoices") {
-                url { parameters.append("finalize", "true") }
-                //Todo parameter to settings
+                url { parameters.append("finalize", settings.getBoolean("finalizeInvoiceState",false).toString()) }
+
                 contentType(ContentType.Application.Json)
                 setBody(Json.encodeToJsonElement(newInvoice))
             }.bodyAsText())
@@ -265,7 +265,7 @@ class LexofficeController : KoinComponent {
     }
 
 
-//Todo Shipping Cost
+
 
 }
 

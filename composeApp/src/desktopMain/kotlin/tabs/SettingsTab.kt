@@ -2,18 +2,22 @@ package tabs
 
 
 import androidx.compose.desktop.ui.tooling.preview.Preview
+import androidx.compose.foundation.*
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalFocusManager
@@ -68,6 +72,7 @@ object SettingsTab : KoinComponent, Tab {
         )
     }
 
+
     @Composable
     @Preview
     override fun Content() {
@@ -83,185 +88,291 @@ object SettingsTab : KoinComponent, Tab {
         var shippingCostName by mutableStateOf(settings.getString("shippingCostName", "Versandkosten"))
         var invoiceTitle by mutableStateOf(settings.getString("invoiceTitle", "Rechnung"))
         var invoiceFooter by mutableStateOf(settings.getString("invoiceFooter", ""))
-
+        var paymentTermLabel by mutableStateOf(
+            settings.getString(
+                "paymentTermLabel",
+                "Sobald der Gesamtbetrag bei uns eingegangen ist, wird die Ware von uns verschickt."
+            )
+        )
+        var paymentTermDuration by mutableStateOf(settings.getString("paymentTermDuration", "14"))
+        var isErrorPaymentTermDurationNotInt by rememberSaveable { mutableStateOf(false) }
+        var shippingDateDays by mutableStateOf(settings.getString("shippingDateDays", "5"))
+        var isErrorShippingDateDaysNotInt by rememberSaveable { mutableStateOf(false) }
         var reset by mutableStateOf(false)
+        var finalizeInvoiceState by mutableStateOf(settings.getBoolean("finalizeInvoiceState", false))
 
+        val scrollstate = rememberScrollState()
         val localFocusManager = LocalFocusManager.current
-
-        Column(modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight()
-            .pointerInput(Unit) {
-                detectTapGestures(onTap = {
-                    localFocusManager.clearFocus()
-                })
-            }) {
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 10.dp, top = 10.dp, end = 10.dp)
-                    .fillMaxWidth()
-            ) {
-                LabelImpl("Lexoffice Api Settings")
-            }
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-
-
-                OutlinedTextField(
-
-                    value = apiKey,
-                    onValueChange = { apiKey = it;settings.putString("apiKey", it) },
-                    label = { Text("Api Key") },
-                    visualTransformation = if (apiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        val image = if (apiKeyVisible)
-                            Icons.Filled.Visibility
-                        else Icons.Filled.VisibilityOff
+        BoxWithConstraints {
+            Column(modifier = Modifier
+                .fillMaxWidth()
+                .verticalScroll(scrollstate)
+                .pointerInput(Unit) {
+                    detectTapGestures(onTap = {
+                        localFocusManager.clearFocus()
+                    })
+                }) {
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                        .padding(start = 10.dp, top = 10.dp, end = 10.dp)
+                        .fillMaxWidth()
+                ) {
+                    LabelImpl("Lexoffice Api Settings")
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
 
 
-                        val description = if (apiKeyVisible) "Hide Api Key" else "Show Api Key"
+                    OutlinedTextField(
 
-                        IconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
-                            Icon(imageVector = image, description)
-                        }
-                    },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-                Box(modifier = Modifier.align(Alignment.CenterVertically).weight(0.8f)) {
-                    ExtendedFloatingActionButton(
-                        onClick = { openBrowserApiKey() },
-                        modifier = Modifier.padding(start = 10.dp).align(Alignment.Center),
+                        value = apiKey,
+                        onValueChange = { apiKey = it;settings.putString("apiKey", it) },
+                        label = { Text("Api Key") },
+                        visualTransformation = if (apiKeyVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            val image = if (apiKeyVisible)
+                                Icons.Filled.Visibility
+                            else Icons.Filled.VisibilityOff
 
-                        text = { Text("Get Api Key") },
-                        icon = { Icon(Icons.Filled.AddCircle, "") },
-                        backgroundColor = Color.LightGray,
+
+                            val description = if (apiKeyVisible) "Hide Api Key" else "Show Api Key"
+
+                            IconButton(onClick = { apiKeyVisible = !apiKeyVisible }) {
+                                Icon(imageVector = image, description)
+                            }
+                        },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                    Box(modifier = Modifier.align(Alignment.CenterVertically).weight(0.8f)) {
+                        ExtendedFloatingActionButton(
+                            onClick = { openBrowserApiKey() },
+                            modifier = Modifier.padding(start = 10.dp).align(Alignment.Center),
+
+                            text = { Text("Get Api Key") },
+                            icon = { Icon(Icons.Filled.AddCircle, "") },
+                            backgroundColor = Color.LightGray,
+
+                            )
+                    }
+
+
+                }
+                DividerImpl()
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                        .padding(start = 10.dp, top = 10.dp, end = 10.dp)
+                        .fillMaxWidth()
+                ) {
+                    LabelImpl("SMTP Settings for Sending Mails")
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+
+                    OutlinedTextField(
+                        value = host,
+                        onValueChange = { host = it;settings.putString("smtpHost", it) },
+                        label = { Text("SMTP Host") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = port,
+                        onValueChange = { port = it;settings.putString("port", it) },
+                        label = { Text("SMTP Port") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    OutlinedTextField(
+                        value = usernameSMTP,
+                        onValueChange = { usernameSMTP = it;settings.putString("usernameSMTP", it) },
+                        label = { Text("SMTP Username") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = passwordSMTP,
+                        onValueChange = { passwordSMTP = it;settings.putString("passwordSMTP", it) },
+                        label = { Text("SMTP Password") },
+                        visualTransformation = if (passwordSMTPVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                        trailingIcon = {
+                            val image = if (passwordSMTPVisible)
+                                Icons.Filled.Visibility
+                            else Icons.Filled.VisibilityOff
+                            val description = if (passwordSMTPVisible) "Hide SMTP Password" else "Show SMTP Password"
+
+                            IconButton(onClick = { passwordSMTPVisible = !passwordSMTPVisible }) {
+                                Icon(imageVector = image, description)
+                            }
+                        },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                }
+                DividerImpl()
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
+                        .padding(start = 10.dp, top = 10.dp, end = 10.dp)
+                        .fillMaxWidth()
+                ) {
+                    LabelImpl("Lexoffice Invoice Settings")
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    OutlinedTextField(
+                        value = unitName,
+                        onValueChange = { unitName = it;settings.putString("unitName", it) },
+                        label = { Text("Unit name") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = shippingCostName,
+                        onValueChange = { shippingCostName = it;settings.putString("shippingCostName", it) },
+                        label = { Text("Position name for shipping cost on invoice") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    OutlinedTextField(
+                        value = invoiceTitle,
+                        onValueChange = { invoiceTitle = it;settings.putString("invoiceTitle", it) },
+                        label = { Text("Invoice title") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = invoiceFooter,
+                        onValueChange = { invoiceFooter = it;settings.putString("invoiceFooter", it) },
+                        label = { Text("Footer text for invoice") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    OutlinedTextField(
+                        value = paymentTermLabel,
+                        onValueChange = { paymentTermLabel = it;settings.putString("paymentTermLabel", it) },
+                        label = { Text("Payment term on invoice") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = paymentTermDuration,
+                        onValueChange = {
+                            paymentTermDuration = it;
+                            try {
+                                paymentTermDuration.toInt()
+                                isErrorPaymentTermDurationNotInt = false;
+                            } catch (e: Exception) {
+                                isErrorPaymentTermDurationNotInt = true;
+                            }
+                            if (!isErrorPaymentTermDurationNotInt) {
+                                settings.putString("paymentTermDuration", it)
+                            }
+                        },
+                        label = { Text("Payment duration in days") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp),
+                        isError = isErrorPaymentTermDurationNotInt,
+                        supportingText = {
+                            if (isErrorPaymentTermDurationNotInt) {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "Not a valid Number",
+                                    color = Color.Red
+                                )
+                            }
+                        },
 
                         )
                 }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                    Column(modifier = Modifier.weight(0.8f).height(IntrinsicSize.Min).padding(10.dp),
+                        verticalArrangement = Arrangement.Center) {
+                        Row(modifier=Modifier.padding(10.dp)) {
+                            Checkbox(
+                                checked = finalizeInvoiceState,
+                                onCheckedChange = {
+                                    finalizeInvoiceState = it;settings.putBoolean("finalizeInvoiceState", it)
+                                },
 
-
-            }
-            DividerImpl()
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 10.dp, top = 10.dp, end = 10.dp)
-                    .fillMaxWidth()
-            ) {
-                LabelImpl("SMTP Settings for Sending Mails")
-            }
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-
-                OutlinedTextField(
-                    value = host,
-                    onValueChange = { host = it;settings.putString("smtpHost", it) },
-                    label = { Text("SMTP Host") },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-                OutlinedTextField(
-                    value = port,
-                    onValueChange = { port = it;settings.putString("port", it) },
-                    label = { Text("SMTP Port") },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-            }
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                OutlinedTextField(
-                    value = usernameSMTP,
-                    onValueChange = { usernameSMTP = it;settings.putString("usernameSMTP", it) },
-                    label = { Text("SMTP Username") },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-                OutlinedTextField(
-                    value = passwordSMTP,
-                    onValueChange = { passwordSMTP = it;settings.putString("passwordSMTP", it) },
-                    label = { Text("SMTP Password") },
-                    visualTransformation = if (passwordSMTPVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                    trailingIcon = {
-                        val image = if (passwordSMTPVisible)
-                            Icons.Filled.Visibility
-                        else Icons.Filled.VisibilityOff
-                        val description = if (passwordSMTPVisible) "Hide SMTP Password" else "Show SMTP Password"
-
-                        IconButton(onClick = { passwordSMTPVisible = !passwordSMTPVisible }) {
-                            Icon(imageVector = image, description)
+                                )
+                            Text(
+                                "Finalize invoice? False=Draft mode",
+                                modifier = Modifier.align(Alignment.CenterVertically)
+                            )
                         }
-                    },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-            }
-            DividerImpl()
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 10.dp, top = 10.dp, end = 10.dp)
-                    .fillMaxWidth()
-            ) {
-                LabelImpl("Lexoffice Invoice Settings")
-            }
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                OutlinedTextField(
-                    value = unitName,
-                    onValueChange = {unitName = it;settings.putString("unitName", it)  },
-                    label = { Text("Unit name") },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-                OutlinedTextField(
-                    value = shippingCostName,
-                    onValueChange = { shippingCostName = it;settings.putString("shippingCostName", it) },
-                    label = { Text("Position name for shipping cost on invoice") },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-            }
-            Row(
-                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceEvenly
-            ) {
-                OutlinedTextField(
-                    value = invoiceTitle,
-                    onValueChange = {invoiceTitle = it;settings.putString("invoiceTitle", it)  },
-                    label = { Text("Invoice title") },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-                OutlinedTextField(
-                    value = invoiceFooter,
-                    onValueChange = { invoiceFooter = it;settings.putString("invoiceFooter", it) },
-                    label = { Text("Footer text for invoice") },
-                    modifier = Modifier.weight(0.8f).padding(10.dp)
-                )
-            }
-            DividerImpl()
-            Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    }
+                    OutlinedTextField(
+                        value = shippingDateDays,
+                        onValueChange = {
+                            shippingDateDays = it;
+                            try {
+                                shippingDateDays.toInt()
+                                isErrorShippingDateDaysNotInt = false;
+                            } catch (e: Exception) {
+                                isErrorShippingDateDaysNotInt = true;
+                            }
+                            if (!isErrorShippingDateDaysNotInt) {
+                                settings.putString("shippingDateDays", it)
+                            }
+                        },
+                        label = { Text("Shipping duration in days") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp),
+                        isError = isErrorShippingDateDaysNotInt,
+                        supportingText = {
+                            if (isErrorShippingDateDaysNotInt) {
+                                Text(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    text = "Not a valid Number",
+                                    color = Color.Red
+                                )
+                            }
+                        },
 
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        store.settings.clear()
-                        reset = !reset
-                    },
-                    modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically),
+                        )
+                }
+                DividerImpl()
+                Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
 
-                    text = { Text("Reset Cache and Saved Data") },
-                    icon = { Icon(Icons.Filled.Delete, "") },
-                    backgroundColor = Color.LightGray
-                )
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            store.settings.clear()
+                            reset = !reset
+                        },
+                        modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically),
+
+                        text = { Text("Reset Cache and Saved Data", color = Color.White) },
+                        icon = { Icon(Icons.Filled.Delete, "", tint = Color.White) },
+                        backgroundColor = Color.Red
+                    )
+                }
+
             }
 
-
+            LaunchedEffect(reset) {}
+            VerticalScrollbar(
+                adapter = rememberScrollbarAdapter(scrollstate),
+                style = LocalScrollbarStyle.current.copy(unhoverColor = Color.Black, shape = RectangleShape),
+                modifier = Modifier.align(
+                    Alignment.CenterEnd
+                )
+            )
         }
-
-
-
-        LaunchedEffect(reset) {}
     }
-
 
 }
 
