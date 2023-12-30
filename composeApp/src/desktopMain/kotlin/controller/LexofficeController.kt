@@ -29,6 +29,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 import kotlin.io.encoding.Base64
 import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.math.pow
 import kotlin.time.Duration.Companion.seconds
 import kotlin.time.toJavaDuration
 
@@ -153,7 +154,7 @@ class LexofficeController : KoinComponent {
                     ),
                     type = "custom",
                     description = null,
-                    unitName = "Stück",  //Todo in Settings hauen
+                    unitName = settings.getString("unitName","Stück"),
                     unitPrice = UnitPrice(
                         currency = it.total?.currency,
                         grossAmount = (Math.round((it.lineItemCost?.value?.toFloat()!! / it.quantity?.toFloat()!!) * 100.0) / 100.0).toFloat(),
@@ -165,9 +166,16 @@ class LexofficeController : KoinComponent {
 
         //If deliviery Cost, then add to lineItemList
         if (order.pricingSummary?.deliveryCost?.value?.toFloat()!! > 0F) {
+            val grossAmount: Float = if(order.pricingSummary?.deliveryDiscount?.value != null && order.pricingSummary!!.deliveryDiscount?.value != "0"){
+                order.pricingSummary!!.deliveryCost?.value?.toFloat()
+                    ?.plus(order.pricingSummary!!.deliveryDiscount?.value?.toFloat()!!)!!
+            }else{
+                order.pricingSummary!!.deliveryCost?.value?.toFloat()!!
+            }
+            println("Gross Amount=${grossAmount.round()}")
             lineItemList.add(
                 LineItem(
-                    description = "Versandkosten",//Todo Settings
+                    description = settings.getString("shippingCostName","Versandkosten"),
                     discountPercentage = null,
                     name = "Versand",
                     quantity = 1,
@@ -175,7 +183,7 @@ class LexofficeController : KoinComponent {
                     unitName = "Anzahl",
                     unitPrice = UnitPrice(
                         currency = order.lineItems.first().total?.currency,
-                        grossAmount = order.pricingSummary!!.deliveryCost?.value?.toFloat(),
+                        grossAmount = grossAmount.round(),
                         taxRatePercentage = 19
                     ) //Todo Settings
 
@@ -193,8 +201,8 @@ class LexofficeController : KoinComponent {
             lineItems = lineItemList,
             taxConditions = TaxConditions(taxType = "gross"),
             voucherDate = order.creationDate,
-            title = "Rechnung",   //Todo Settings
-            remark = "Fußbereich, Variable remark", //Todo Settings
+            title = settings.getString("invoiceTitle", "Rechnung"),
+            remark = settings.getString("invoiceFooter",""),
             totalPrice = TotalPrice(currency = order.totalFeeBasisAmount?.currency),
             paymentConditions =
             PaymentConditions(
@@ -259,4 +267,10 @@ class LexofficeController : KoinComponent {
 
 //Todo Shipping Cost
 
+}
+
+private fun Float.round(): Float {
+    val result = (this*100).toInt()
+    val returnValue = result.toFloat()/100.00F
+   return returnValue
 }

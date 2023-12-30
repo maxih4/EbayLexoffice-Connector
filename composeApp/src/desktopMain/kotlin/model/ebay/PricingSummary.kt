@@ -10,5 +10,6 @@ data class PricingSummary (
     var deliveryCost  : DeliveryCost?  = DeliveryCost(),
     var total         : Total?         = Total(),
     val priceDiscount: PriceDiscount? = PriceDiscount(),
+    var deliveryDiscount: DeliveryDiscount? = DeliveryDiscount()
 
     )

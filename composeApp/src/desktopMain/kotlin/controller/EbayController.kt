@@ -37,12 +37,12 @@ class EbayController() : KoinComponent {
     private val backendUrl = "https://ebaylexofficeconnector.azurewebsites.net"
 
 
-    fun openBrowser() {
+    fun openBrowser(url: String) {
         println("Open Browser Funktion")
         val desktop = Desktop.getDesktop()
         desktop.browse(
             URI.create(
-                "https://auth.ebay.com/oauth2/authorize?client_id=MaxHandk-Lexoffic-PRD-8d4a886f5-3ad867b8&response_type=code&redirect_uri=Max_Handke-MaxHandk-Lexoff-nolrf&scope=https://api.ebay.com/oauth/api_scope+https://api.ebay.com/oauth/api_scope/sell.marketing.readonly+https://api.ebay.com/oauth/api_scope/sell.marketing+https://api.ebay.com/oauth/api_scope/sell.inventory.readonly+https://api.ebay.com/oauth/api_scope/sell.inventory+https://api.ebay.com/oauth/api_scope/sell.account.readonly+https://api.ebay.com/oauth/api_scope/sell.account+https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly+https://api.ebay.com/oauth/api_scope/sell.fulfillment+https://api.ebay.com/oauth/api_scope/sell.analytics.readonly+https://api.ebay.com/oauth/api_scope/sell.finances+https://api.ebay.com/oauth/api_scope/sell.payment.dispute+https://api.ebay.com/oauth/api_scope/commerce.identity.readonly+https://api.ebay.com/oauth/api_scope/commerce.notification.subscription+https://api.ebay.com/oauth/api_scope/commerce.notification.subscription.readonly"
+                url
             )
         )
 
@@ -64,8 +64,8 @@ class EbayController() : KoinComponent {
                     }
                     val response = client.get("$backendUrl/auth") {
 
-                        url{
-                            parameters.append("code",authToken)
+                        url {
+                            parameters.append("code", authToken)
                         }
 
                     }
@@ -98,7 +98,7 @@ class EbayController() : KoinComponent {
 
 
     suspend fun getResponse(url: String, startDate: String?, endDate: String?): OrderResponse {
-        val starttime=Clock.System.now()
+        val starttime = Clock.System.now()
         val client = HttpClient(CIO) {
 
 
@@ -125,19 +125,19 @@ class EbayController() : KoinComponent {
                         try {
 
 
-
-                            val refreshTokenResponse = Json.decodeFromString<RefreshTokenResponse>(client.get("$backendUrl/refresh"){
-                                url{
-                                    parameters.append("refreshToken",oldTokens!!.refreshToken)
-                                }
-                                markAsRefreshTokenRequest()
-                            }.bodyAsText())
+                            val refreshTokenResponse =
+                                Json.decodeFromString<RefreshTokenResponse>(client.get("$backendUrl/refresh") {
+                                    url {
+                                        parameters.append("refreshToken", oldTokens!!.refreshToken)
+                                    }
+                                    markAsRefreshTokenRequest()
+                                }.bodyAsText())
 
                             println("Ausgeführt und Antwort erhalten $refreshTokenResponse")
                             settings.putString("access_token", refreshTokenResponse.access_token)
                             settings.putInt("expires_in", refreshTokenResponse.expires_in)
                         } catch (e: Exception) {
-                            //Todo neuen Login Flow
+                            println("Exception while trying to get refreshTokens: ${e.message}")
                         }
 
                         BearerTokens(
@@ -145,7 +145,7 @@ class EbayController() : KoinComponent {
                             oldTokens?.refreshToken!!
                         )
                     }
-                    //sendWithoutRequest { request -> request.url.toString() != "https://api.ebay.com/identity/v1/oauth2/token" }
+
 
 
                 }
@@ -211,7 +211,7 @@ class EbayController() : KoinComponent {
 
 
         }
-        val time = starttime-Clock.System.now()
+        val time = starttime - Clock.System.now()
         println("IT took me $time")
         return response
 

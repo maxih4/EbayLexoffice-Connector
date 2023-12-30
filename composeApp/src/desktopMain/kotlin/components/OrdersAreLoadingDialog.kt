@@ -8,20 +8,25 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.multiplatform.progressindicator.SimpleProgressIndicatorWithAnim
+import java.awt.Cursor
 
 @Composable
 @Preview
 fun OrdersAreLoadingDialog(onDismissRequest: () -> Unit,progress: Float) {
-    Dialog(onDismissRequest = { onDismissRequest() }) {
+    Dialog(
+        onDismissRequest = { onDismissRequest() },) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(100.dp)
-                .padding(16.dp),
+                .padding(16.dp)
+                .pointerHoverIcon(PointerIcon(Cursor.getPredefinedCursor(Cursor.WAIT_CURSOR))),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column (modifier = Modifier.fillMaxSize().padding(10.dp),

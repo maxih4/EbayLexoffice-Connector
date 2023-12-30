@@ -37,8 +37,10 @@ import kotlinx.datetime.Instant
 import kotlinx.datetime.toJavaInstant
 import kotlinx.serialization.json.Json
 import model.ebay.Orders
+import org.jetbrains.skiko.CursorManager
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
+import java.awt.Cursor
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.*
@@ -151,8 +153,8 @@ object HomeTab : KoinComponent, Tab {
                         mailController.sendMail(
                             from = settings.getString("usernameSMTP",""),
                             to = "", //Todo
-                            "Invoice for order ${it.orderId}",
-                            "<3",
+                            "Invoice for order ${it.orderId}",//Todo
+                            "<3",//Todo
                             fileName = "invoice-${it.orderId}",
                             filePath = tempPdfPath
                         ).join()
@@ -164,6 +166,7 @@ object HomeTab : KoinComponent, Tab {
 
                     if (loadingProgress.value >= 1) {
                         isLoading.value = false
+
                     }
                 }
 
@@ -184,7 +187,7 @@ object HomeTab : KoinComponent, Tab {
                         )
                     )
                 ) {
-                    ebayAuthController.openBrowser()
+                    ebayAuthController.openBrowser("https://auth.ebay.com/oauth2/authorize?client_id=MaxHandk-Lexoffic-PRD-8d4a886f5-3ad867b8&response_type=code&redirect_uri=Max_Handke-MaxHandk-Lexoff-nolrf&scope=https://api.ebay.com/oauth/api_scope+https://api.ebay.com/oauth/api_scope/sell.marketing.readonly+https://api.ebay.com/oauth/api_scope/sell.marketing+https://api.ebay.com/oauth/api_scope/sell.inventory.readonly+https://api.ebay.com/oauth/api_scope/sell.inventory+https://api.ebay.com/oauth/api_scope/sell.account.readonly+https://api.ebay.com/oauth/api_scope/sell.account+https://api.ebay.com/oauth/api_scope/sell.fulfillment.readonly+https://api.ebay.com/oauth/api_scope/sell.fulfillment+https://api.ebay.com/oauth/api_scope/sell.analytics.readonly+https://api.ebay.com/oauth/api_scope/sell.finances+https://api.ebay.com/oauth/api_scope/sell.payment.dispute+https://api.ebay.com/oauth/api_scope/commerce.identity.readonly+https://api.ebay.com/oauth/api_scope/commerce.notification.subscription+https://api.ebay.com/oauth/api_scope/commerce.notification.subscription.readonly")
                     ebayAuthController.openServer().access_token
                 }
 
@@ -294,11 +297,16 @@ object HomeTab : KoinComponent, Tab {
                             horizontalArrangement = Arrangement.SpaceEvenly){
                             ExtendedFloatingActionButton(
                                 onClick = {
+                                    if(checkedOrders.isNotEmpty()){
                                     createContactGenerateInvoiceAndSendMail(checkedSendMailState.value);
-                                    //TODO Add Email sending to the users
                                     println(
-                                    "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
-                                )
+                                        "Checked Orders: " + checkedOrders.map { o -> o.orderId.toString() }.toString()
+                                    )
+                                }
+                                else{
+                                    //Todo Fehler weil leer
+                                    }
+
                                 },
                                 modifier = Modifier.padding(5.dp),
                                 text = { Text("Create Invoice") },

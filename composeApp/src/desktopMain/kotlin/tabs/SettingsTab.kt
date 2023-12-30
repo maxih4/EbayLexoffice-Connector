@@ -23,6 +23,8 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import cafe.adriel.voyager.navigator.tab.Tab
 import cafe.adriel.voyager.navigator.tab.TabOptions
+import components.DividerImpl
+import components.LabelImpl
 import controller.MailController
 import controller.StorageController
 import kotlinx.coroutines.*
@@ -49,7 +51,7 @@ object SettingsTab : KoinComponent, Tab {
 
             return remember {
                 TabOptions(
-                    index = 1u,
+                    index = 2u,
                     title = "Settings",
                     icon = icon
                 )
@@ -77,6 +79,11 @@ object SettingsTab : KoinComponent, Tab {
         var usernameSMTP by mutableStateOf(settings.getString("usernameSMTP", ""))
         var host by mutableStateOf(settings.getString("smtpHost", ""))
         var port by mutableStateOf(settings.getString("port", ""))
+        var unitName by mutableStateOf(settings.getString("unitName", "Stück"))
+        var shippingCostName by mutableStateOf(settings.getString("shippingCostName", "Versandkosten"))
+        var invoiceTitle by mutableStateOf(settings.getString("invoiceTitle", "Rechnung"))
+        var invoiceFooter by mutableStateOf(settings.getString("invoiceFooter", ""))
+
         var reset by mutableStateOf(false)
 
         val localFocusManager = LocalFocusManager.current
@@ -89,11 +96,17 @@ object SettingsTab : KoinComponent, Tab {
                     localFocusManager.clearFocus()
                 })
             }) {
-
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 10.dp, top = 10.dp, end = 10.dp)
+                    .fillMaxWidth()
+            ) {
+                LabelImpl("Lexoffice Api Settings")
+            }
             Row(
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceEvenly
             ) {
+
 
                 OutlinedTextField(
 
@@ -129,6 +142,13 @@ object SettingsTab : KoinComponent, Tab {
                 }
 
 
+            }
+            DividerImpl()
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 10.dp, top = 10.dp, end = 10.dp)
+                    .fillMaxWidth()
+            ) {
+                LabelImpl("SMTP Settings for Sending Mails")
             }
             Row(
                 modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
@@ -177,63 +197,71 @@ object SettingsTab : KoinComponent, Tab {
                     modifier = Modifier.weight(0.8f).padding(10.dp)
                 )
             }
-            Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        coroutineScope.launch {
-                            sendMail()
-                        }
-
-                    },
-                    modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically),
-
-                    text = { Text("Send Mail") },
-                    icon = { Icon(Icons.Filled.Send, "") },
-                    backgroundColor = Color.LightGray
+            DividerImpl()
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(start = 10.dp, top = 10.dp, end = 10.dp)
+                    .fillMaxWidth()
+            ) {
+                LabelImpl("Lexoffice Invoice Settings")
+            }
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                OutlinedTextField(
+                    value = unitName,
+                    onValueChange = {unitName = it;settings.putString("unitName", it)  },
+                    label = { Text("Unit name") },
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
                 )
+                OutlinedTextField(
+                    value = shippingCostName,
+                    onValueChange = { shippingCostName = it;settings.putString("shippingCostName", it) },
+                    label = { Text("Position name for shipping cost on invoice") },
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
+                )
+            }
+            Row(
+                modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+            ) {
+                OutlinedTextField(
+                    value = invoiceTitle,
+                    onValueChange = {invoiceTitle = it;settings.putString("invoiceTitle", it)  },
+                    label = { Text("Invoice title") },
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
+                )
+                OutlinedTextField(
+                    value = invoiceFooter,
+                    onValueChange = { invoiceFooter = it;settings.putString("invoiceFooter", it) },
+                    label = { Text("Footer text for invoice") },
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
+                )
+            }
+            DividerImpl()
+            Row(modifier = Modifier.padding(10.dp).fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+
                 ExtendedFloatingActionButton(
                     onClick = {
                         store.settings.clear()
-                        reset=!reset
+                        reset = !reset
                     },
                     modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically),
 
                     text = { Text("Reset Cache and Saved Data") },
                     icon = { Icon(Icons.Filled.Delete, "") },
                     backgroundColor = Color.LightGray
-                )}
-
+                )
             }
 
 
-
-        LaunchedEffect(reset){}
-    }
-
-    private suspend fun sendMail() {
-        val mailList = mutableListOf<Deferred<Job>>()
-        val starttime = Clock.System.now()
-        println("Start sending mails")
-        for (i in 1..20) {
-
-            mailList.add(CoroutineScope(Dispatchers.Default).async {
-                mailController.sendMail(
-                    from = "",
-                    to = "",
-                    "TestMail $i",
-                    "<3",
-                    fileName="",
-                    filePath = Path("")
-                )
-            })
-
         }
-        val awaitedList = mailList.awaitAll().joinAll()
 
-        val time = starttime - Clock.System.now()
-        println("Sending $20 mails took me $time")
 
+
+        LaunchedEffect(reset) {}
     }
+
 
 }
 
