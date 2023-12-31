@@ -197,7 +197,7 @@ class LexofficeController : KoinComponent {
                 contactId = contactId
             ),
             archived = false,
-            introduction = "Hier steht ein Rechnungsstring der variable Introduction",
+            introduction = settings.getString("invoiceHeader",""),
             lineItems = lineItemList,
             taxConditions = TaxConditions(taxType = "gross"),
             voucherDate = order.creationDate,

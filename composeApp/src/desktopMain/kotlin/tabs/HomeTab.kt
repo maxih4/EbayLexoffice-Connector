@@ -152,9 +152,9 @@ object HomeTab : KoinComponent, Tab {
                         mailController.sendMail(
                             from = settings.getString("usernameSMTP",""),
                             to = "", //Todo
-                            "Invoice for order ${it.orderId}",//Todo
+                            subject= settings.getString("mailSubject","Rechnung zur Bestellung") +" ${it.orderId}",
                             "<3",//Todo
-                            fileName = "invoice-${it.orderId}",
+                            fileName = settings.getString("fileNameInvoice","Rechnung")+"-${it.orderId}",
                             filePath = tempPdfPath
                         ).join()
 

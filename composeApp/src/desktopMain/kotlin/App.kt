@@ -9,6 +9,7 @@ import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.navigator.tab.*
 import org.jetbrains.skiko.CursorManager
 import tabs.HomeTab
+import tabs.MailEditorTab
 import tabs.PaymentTab
 import tabs.SettingsTab
 import java.awt.Component
@@ -60,6 +61,7 @@ fun App() {
                 BottomNavigation {
                     TabNavigationItem(HomeTab)
                     //TabNavigationItem(PaymentTab)
+                    //TabNavigationItem(MailEditorTab)
                     TabNavigationItem(SettingsTab)
 
                 }

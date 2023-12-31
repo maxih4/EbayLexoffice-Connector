@@ -84,7 +84,10 @@ object SettingsTab : KoinComponent, Tab {
         var usernameSMTP by mutableStateOf(settings.getString("usernameSMTP", ""))
         var host by mutableStateOf(settings.getString("smtpHost", ""))
         var port by mutableStateOf(settings.getString("port", ""))
+        var invoiceHeader by mutableStateOf(settings.getString("invoiceHeader", ""))
         var unitName by mutableStateOf(settings.getString("unitName", "Stück"))
+        var mailSubject by mutableStateOf(settings.getString("mailSubject","Rechnung zur Bestellung"))
+        var fileNameInvoice by mutableStateOf(settings.getString("fileNameInvoice","Rechnung"))
         var shippingCostName by mutableStateOf(settings.getString("shippingCostName", "Versandkosten"))
         var invoiceTitle by mutableStateOf(settings.getString("invoiceTitle", "Rechnung"))
         var invoiceFooter by mutableStateOf(settings.getString("invoiceFooter", ""))
@@ -166,7 +169,7 @@ object SettingsTab : KoinComponent, Tab {
                         .padding(start = 10.dp, top = 10.dp, end = 10.dp)
                         .fillMaxWidth()
                 ) {
-                    LabelImpl("SMTP Settings for Sending Mails")
+                    LabelImpl("Settings for Sending Mails")
                 }
                 Row(
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
@@ -183,6 +186,24 @@ object SettingsTab : KoinComponent, Tab {
                         value = port,
                         onValueChange = { port = it;settings.putString("port", it) },
                         label = { Text("SMTP Port") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+
+                    OutlinedTextField(
+                        value = mailSubject,
+                        onValueChange = { mailSubject = it;settings.putString("mailSubject", it) },
+                        label = { Text("Mail subject + orderId") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                    OutlinedTextField(
+                        value = fileNameInvoice,
+                        onValueChange = { fileNameInvoice = it;settings.putString("fileNameInvoice", it) },
+                        label = { Text("Invoice attachment name + orderId") },
                         modifier = Modifier.weight(0.8f).padding(10.dp)
                     )
                 }
@@ -254,6 +275,23 @@ object SettingsTab : KoinComponent, Tab {
                         value = invoiceFooter,
                         onValueChange = { invoiceFooter = it;settings.putString("invoiceFooter", it) },
                         label = { Text("Footer text for invoice") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )
+                }
+                Row(
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                   /* OutlinedTextField(
+                        value = invoiceTitle,
+                        onValueChange = { invoiceTitle = it;settings.putString("invoiceTitle", it) },
+                        label = { Text("Invoice title") },
+                        modifier = Modifier.weight(0.8f).padding(10.dp)
+                    )*/
+                    OutlinedTextField(
+                        value = invoiceHeader,
+                        onValueChange = { invoiceHeader= it;settings.putString("invoiceHeader", it) },
+                        label = { Text("Header text for invoice") },
                         modifier = Modifier.weight(0.8f).padding(10.dp)
                     )
                 }
