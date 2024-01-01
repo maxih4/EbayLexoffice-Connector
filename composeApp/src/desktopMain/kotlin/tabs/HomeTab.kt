@@ -151,7 +151,7 @@ object HomeTab : KoinComponent, Tab {
                         //Send Mail to Customer
                         mailController.sendMail(
                             from = settings.getString("usernameSMTP",""),
-                            to = "", //Todo
+                            to = it.buyer!!.buyerRegistrationAddress?.email.orEmpty(), //Todo
                             subject= settings.getString("mailSubject","Rechnung zur Bestellung") +" ${it.orderId}",
                             "<3",//Todo
                             fileName = settings.getString("fileNameInvoice","Rechnung")+"-${it.orderId}",

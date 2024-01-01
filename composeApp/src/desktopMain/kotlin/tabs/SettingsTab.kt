@@ -390,6 +390,7 @@ object SettingsTab : KoinComponent, Tab {
                         onClick = {
                             store.settings.clear()
                             reset = !reset
+                            println("reset button clicked")
                         },
                         modifier = Modifier.padding(start = 10.dp).align(Alignment.CenterVertically),
 
@@ -401,7 +402,7 @@ object SettingsTab : KoinComponent, Tab {
 
             }
 
-            LaunchedEffect(reset) {}
+
             VerticalScrollbar(
                 adapter = rememberScrollbarAdapter(scrollstate),
                 style = LocalScrollbarStyle.current.copy(unhoverColor = Color.Black, shape = RectangleShape),
@@ -409,8 +410,8 @@ object SettingsTab : KoinComponent, Tab {
                     Alignment.CenterEnd
                 )
             )
-        }
-    }
+             }
+        LaunchedEffect(reset) {println("launched Effect")}}
 
 }
 

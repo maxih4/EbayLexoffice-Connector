@@ -32,7 +32,6 @@ kotlin {
             implementation(compose.material)
             @OptIn(ExperimentalComposeLibrary::class)
             implementation(compose.components.resources)
-            implementation("org.slf4j:slf4j-api:2.0.9")
             implementation("com.russhwolf:multiplatform-settings:1.1.1")
             implementation("io.ktor:ktor-client-auth:2.3.6")
             implementation("io.insert-koin:koin-core:3.5.2-RC1")
@@ -56,6 +55,8 @@ kotlin {
             implementation("io.ktor:ktor-server-netty:2.3.6")
             implementation("io.ktor:ktor-client-logging-jvm:2.3.6")
             implementation("com.sletmoe.bucket4k:bucket4k:1.0.0")
+            implementation("org.apache.logging.log4j:log4j-api:2.22.1")
+            implementation("org.apache.logging.log4j:log4j-core:2.22.1")
 
 
         }
@@ -74,8 +75,11 @@ compose.desktop {
 
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.example.project"
+            packageName = "EbayLexoffice Connector"
             packageVersion = "1.0.0"
+        }
+        buildTypes.release.proguard {
+            configurationFiles.from(project.file("compose-desktop.pro"))
         }
     }
 }

@@ -3,17 +3,14 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
+
 import androidx.compose.ui.Modifier
 import cafe.adriel.voyager.core.annotation.ExperimentalVoyagerApi
 import cafe.adriel.voyager.navigator.tab.*
-import org.jetbrains.skiko.CursorManager
+
 import tabs.HomeTab
-import tabs.MailEditorTab
-import tabs.PaymentTab
+
 import tabs.SettingsTab
-import java.awt.Component
-import java.awt.Cursor
 
 
 @Composable
