@@ -17,11 +17,11 @@ Goal of the project is to generate Invoices in Lexoffice from your Ebay Orders o
 
 ![home](https://github.com/maxih4/EbayLexoffice-Connector/assets/81751050/24238a8e-1297-4db7-b472-d4cc0a992ed2)
 
-![home-with-orders](https://github.com/maxih4/EbayLexoffice-Connector/assets/81751050/d5bc02f4-d6cf-4940-94b1-6ea7f26faa04)
+![home-with-orders](https://github.com/maxih4/EbayLexoffice-Connector/assets/81751050/0a9fc3af-cd74-4170-a0d0-d46369ef9e60)
 
-![settings-1](https://github.com/maxih4/EbayLexoffice-Connector/assets/81751050/2f2c2326-8448-497f-97a6-d8fac25ed9ef)
+![settings-1](https://github.com/maxih4/EbayLexoffice-Connector/assets/81751050/67aa3285-d559-4509-8f7e-dee2aa8e10ca)
 
-![settings-2](https://github.com/maxih4/EbayLexoffice-Connector/assets/81751050/de396998-4f30-4ef3-a1b6-f8139244729d)
+![settings-2](https://github.com/maxih4/EbayLexoffice-Connector/assets/81751050/8c333b0e-060f-48f7-b0cd-af64244f9681)
 
 
 # NOT READY YET
