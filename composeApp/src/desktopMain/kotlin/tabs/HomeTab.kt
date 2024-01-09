@@ -115,6 +115,7 @@ object HomeTab : KoinComponent, Tab {
 
         fun createContactGenerateInvoiceAndSendMail(sendEmail: Boolean) {
             //Todo Fehler wenn checked Orders leer
+            val content= "Sehr geehrter Kunde,\n vielen Dank für Ihren Einkauf. Anbei erhalten Sie Ihre Rechnung.\n\n\n Liebe Grüße!"
             isLoading.value = true
             loadingProgress.value = 0F
             val progressSize: Float = (1F / checkedOrders.size)
@@ -153,7 +154,7 @@ object HomeTab : KoinComponent, Tab {
                             from = settings.getString("usernameSMTP",""),
                             to = it.buyer!!.buyerRegistrationAddress?.email.orEmpty(), //Todo
                             subject= settings.getString("mailSubject","Rechnung zur Bestellung") +" ${it.orderId}",
-                            "<3",//Todo
+                            content= content,//Todo
                             fileName = settings.getString("fileNameInvoice","Rechnung")+"-${it.orderId}",
                             filePath = tempPdfPath
                         ).join()
