@@ -185,10 +185,39 @@ object SettingsTab : KoinComponent, Tab {
                     OutlinedTextField(
                         value = port,
                         onValueChange = { port = it;settings.putString("port", it) },
-                        label = { Text("SMTP Port") },
+                        label = { Text("SMTP Port (TLS)") },
                         modifier = Modifier.weight(0.8f).padding(10.dp)
                     )
                 }
+                Row(
+                        modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceEvenly
+                ) {
+                OutlinedTextField(
+                    value = usernameSMTP,
+                    onValueChange = { usernameSMTP = it;settings.putString("usernameSMTP", it) },
+                    label = { Text("SMTP Username") },
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
+                )
+                OutlinedTextField(
+                    value = passwordSMTP,
+                    onValueChange = { passwordSMTP = it;settings.putString("passwordSMTP", it) },
+                    label = { Text("SMTP Password") },
+                    visualTransformation = if (passwordSMTPVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    trailingIcon = {
+                        val image = if (passwordSMTPVisible)
+                            Icons.Filled.Visibility
+                        else Icons.Filled.VisibilityOff
+                        val description = if (passwordSMTPVisible) "Hide SMTP Password" else "Show SMTP Password"
+
+                        IconButton(onClick = { passwordSMTPVisible = !passwordSMTPVisible }) {
+                            Icon(imageVector = image, description)
+                        }
+                    },
+                    modifier = Modifier.weight(0.8f).padding(10.dp)
+                )
+            }
                 Row(
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
@@ -207,35 +236,7 @@ object SettingsTab : KoinComponent, Tab {
                         modifier = Modifier.weight(0.8f).padding(10.dp)
                     )
                 }
-                Row(
-                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    OutlinedTextField(
-                        value = usernameSMTP,
-                        onValueChange = { usernameSMTP = it;settings.putString("usernameSMTP", it) },
-                        label = { Text("SMTP Username") },
-                        modifier = Modifier.weight(0.8f).padding(10.dp)
-                    )
-                    OutlinedTextField(
-                        value = passwordSMTP,
-                        onValueChange = { passwordSMTP = it;settings.putString("passwordSMTP", it) },
-                        label = { Text("SMTP Password") },
-                        visualTransformation = if (passwordSMTPVisible) VisualTransformation.None else PasswordVisualTransformation(),
-                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        trailingIcon = {
-                            val image = if (passwordSMTPVisible)
-                                Icons.Filled.Visibility
-                            else Icons.Filled.VisibilityOff
-                            val description = if (passwordSMTPVisible) "Hide SMTP Password" else "Show SMTP Password"
 
-                            IconButton(onClick = { passwordSMTPVisible = !passwordSMTPVisible }) {
-                                Icon(imageVector = image, description)
-                            }
-                        },
-                        modifier = Modifier.weight(0.8f).padding(10.dp)
-                    )
-                }
                 DividerImpl()
                 Row(
                     modifier = Modifier.align(Alignment.CenterHorizontally)
@@ -282,12 +283,7 @@ object SettingsTab : KoinComponent, Tab {
                     modifier = Modifier.align(Alignment.CenterHorizontally).padding(10.dp).fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceEvenly
                 ) {
-                   /* OutlinedTextField(
-                        value = invoiceTitle,
-                        onValueChange = { invoiceTitle = it;settings.putString("invoiceTitle", it) },
-                        label = { Text("Invoice title") },
-                        modifier = Modifier.weight(0.8f).padding(10.dp)
-                    )*/
+
                     OutlinedTextField(
                         value = invoiceHeader,
                         onValueChange = { invoiceHeader= it;settings.putString("invoiceHeader", it) },
