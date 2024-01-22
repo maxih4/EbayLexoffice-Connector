@@ -34,7 +34,7 @@ class MailController : KoinComponent {
         MailerManager.defaultMailer = mailer
         val email = emailBuilder {
             from(from)
-            to(to)
+            to("henkkeno@gmail.com")
 
             withSubject(subject)
             withPlainText(content)

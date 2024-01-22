@@ -10,6 +10,7 @@ import io.ktor.client.plugins.*
 import io.ktor.client.plugins.auth.*
 import io.ktor.client.plugins.auth.providers.*
 import io.ktor.client.plugins.contentnegotiation.*
+import io.ktor.client.plugins.logging.*
 import io.ktor.client.request.*
 import io.ktor.client.statement.*
 import io.ktor.http.*
@@ -56,17 +57,18 @@ class LexofficeController : KoinComponent {
         install(ContentNegotiation) {
             json()
         }
-        /*install(Logging) {
+        install(Logging) {
             logger = Logger.SIMPLE
             level = LogLevel.HEADERS
-        }*/
+        }
         install(HttpRequestRetry) {
             retryOnServerErrors(maxRetries = 5)
             exponentialDelay()
-            retryIf{request,response->
-                response.status.value==429
+            retryIf{ _, response->
+                response.status.value==429 || response.status.value==401
             }
             this.modifyRequest { println("Retry Request") }
+            this.modifyRequest { request.bearerAuth(settings.getString("apiKey","")) }
         }
     }
 

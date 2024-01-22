@@ -76,6 +76,8 @@ object SettingsTab : KoinComponent, Tab {
     @Composable
     @Preview
     override fun Content() {
+
+
         val coroutineScope = rememberCoroutineScope()
         var apiKey by mutableStateOf(settings.getString("apiKey", ""))
         var apiKeyVisible by rememberSaveable { mutableStateOf(false) }
